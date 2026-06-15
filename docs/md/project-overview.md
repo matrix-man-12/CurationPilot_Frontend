@@ -57,6 +57,7 @@ The frontend is the user-facing interface. It:
   - **Bulk Execution (CSV)**: Built-in drag-and-drop CSV loader, client-side JS CSV parser with schema validation, expected headers indicators, and scrollable data tables for loaded sets.
   - **Controls Panel**: Live toolbar providing Pause, Resume, and Cancel execution requests.
   - **Human-in-the-loop (HITL)**: Contextual decision prompts blocking Playwright execution until explicit user Approve/Reject confirmation is submitted.
+  - **Multi-Sensory Alerts (HITL)**: Desktop push notifications (HTML5 Notification API), visual browser tab flashing (toggling document title), and synthetically generated audio beeps (Web Audio API) alert the user when an execution enters the HITL (`waiting_for_user`) validation state, ensuring they are notified instantly even when working in other tabs or minimized windows.
   - **Logs Stream**: Live console log viewport streaming real-time operational messages (persistent in-chat logs and historical logs surviving page reloads).
   - **History View**: Searchable list of past sessions, loading full chat recovery from local storage.
 - **Backend**: Not yet started — the API specifications are finalized for REST endpoints (see [api-specification.md](./api-specification.md)), with WebSockets drafted for a subsequent phase (see [websocket-specification.md](./websocket-specification.md)).

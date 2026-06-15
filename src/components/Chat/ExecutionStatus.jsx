@@ -12,6 +12,49 @@ import {
 } from '../../services/api';
 import './ExecutionStatus.css';
 
+function playBeep() {
+  try {
+    const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    const oscillator = audioCtx.createOscillator();
+    const gainNode = audioCtx.createGain();
+
+    oscillator.connect(gainNode);
+    gainNode.connect(audioCtx.destination);
+
+    oscillator.type = 'sine';
+    oscillator.frequency.setValueAtTime(880, audioCtx.currentTime); // A5 note
+    gainNode.gain.setValueAtTime(0, audioCtx.currentTime);
+    gainNode.gain.linearRampToValueAtTime(0.3, audioCtx.currentTime + 0.05);
+    gainNode.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.4);
+
+    oscillator.start(audioCtx.currentTime);
+    oscillator.stop(audioCtx.currentTime + 0.4);
+  } catch (err) {
+    console.error('Failed to play audio alert:', err);
+  }
+}
+
+let titleInterval = null;
+function startFlashingTitle() {
+  if (titleInterval) return;
+  const originalTitle = document.title;
+  let isAlt = false;
+  titleInterval = setInterval(() => {
+    document.title = isAlt ? "🔴 Action Required!" : "⚠️ CurationPilot";
+    isAlt = !isAlt;
+  }, 1000);
+
+  const stopFlashing = () => {
+    clearInterval(titleInterval);
+    titleInterval = null;
+    document.title = originalTitle;
+    window.removeEventListener('focus', stopFlashing);
+    window.removeEventListener('click', stopFlashing);
+  };
+  window.addEventListener('focus', stopFlashing);
+  window.addEventListener('click', stopFlashing);
+}
+
 export default function ExecutionStatus({ message }) {
   const { activeSession } = useAppState();
   const dispatch = useAppDispatch();
@@ -21,8 +64,15 @@ export default function ExecutionStatus({ message }) {
   const pollRef = useRef(null);
   const startedRef = useRef(false);
   const logsEndRef = useRef(null);
+  const notifiedRef = useRef(false);
 
   const logs = message?.meta?.logs || [];
+
+  useEffect(() => {
+    if ('Notification' in window && Notification.permission === 'default') {
+      Notification.requestPermission();
+    }
+  }, []);
 
   useEffect(() => {
     if (!startedRef.current && activeSession.status === 'executing') {
@@ -86,7 +136,28 @@ export default function ExecutionStatus({ message }) {
         }
         if (data.status === 'waiting_for_user') {
           // Pause polling, wait for HITL approval
+          if (!notifiedRef.current) {
+            notifiedRef.current = true;
+            playBeep();
+            startFlashingTitle();
+
+            if ('Notification' in window && Notification.permission === 'granted') {
+              const notification = new Notification("Action Required — CurationPilot", {
+                body: `The execution for "${activeSession.skillName}" requires your approval to proceed.`,
+                icon: '/favicon.svg',
+                tag: 'hitl-notification',
+                requireInteraction: true
+              });
+              notification.onclick = () => {
+                window.focus();
+              };
+            }
+          }
           return;
+        }
+
+        if (data.status === 'running') {
+          notifiedRef.current = false;
         }
 
         // Continue polling

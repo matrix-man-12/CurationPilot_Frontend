@@ -179,6 +179,7 @@
               </ul>
             </li>
             <li><strong>CSS Custom Properties</strong>: Custom design tokens are organized in <code>variables.css</code>, facilitating a highly custom, responsive warm-pastel visual system without depending on external CSS frameworks.</li>
+            <li><strong>Multi-Sensory HITL Alerts</strong>: System push notifications are triggered natively using the HTML5 Notification API. In addition, to support platforms without push support (like standard iOS Safari) or silent desktop scenarios, the system fires a synthetic electronic audio beep (via the Web Audio API) and flashes the document tab title (toggling between <code>🔴 Action Required!</code> and <code>⚠️ CurationPilot</code>). These alerts trigger only once per HITL step, and clear immediately when focus or click returns to the viewport.</li>
           </ol>
         </section>
       </article>

@@ -202,6 +202,10 @@ export default function ParameterForm() {
 
   function handleSubmit(e) {
     e.preventDefault();
+
+    if ('Notification' in window && Notification.permission === 'default') {
+      Notification.requestPermission().catch(err => console.error('Notification permission request error:', err));
+    }
     
     if (activeTab === 'csv') {
       if (csvRows.length === 0) return;
