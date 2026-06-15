@@ -37,8 +37,15 @@ function loadFromStorage(key, fallback) {
   }
 }
 
+const initialView = () => {
+  const path = window.location.pathname;
+  if (path === '/history') return 'history';
+  if (path === '/logs') return 'logs';
+  return 'chat';
+};
+
 const initialState = {
-  currentView: 'chat', // 'chat' | 'history'
+  currentView: initialView(),
   activeSession: loadFromStorage(STORAGE_KEY_ACTIVE, null) || createSession(),
   sessions: loadFromStorage(STORAGE_KEY_SESSIONS, []),
 };
@@ -260,6 +267,27 @@ export function AppProvider({ children }) {
       // localStorage might be full — fail silently
     }
   }, [state.activeSession, state.sessions]);
+
+  // Handle URL Routing Sync
+  useEffect(() => {
+    const viewPath = state.currentView === 'chat' ? '/' : `/${state.currentView}`;
+    if (window.location.pathname !== viewPath) {
+      window.history.pushState(null, '', viewPath);
+    }
+  }, [state.currentView]);
+
+  useEffect(() => {
+    const handlePopState = () => {
+      const path = window.location.pathname;
+      let targetView = 'chat';
+      if (path === '/history') targetView = 'history';
+      else if (path === '/logs') targetView = 'logs';
+      dispatch({ type: 'SET_VIEW', payload: targetView });
+    };
+
+    window.addEventListener('popstate', handlePopState);
+    return () => window.removeEventListener('popstate', handlePopState);
+  }, [dispatch]);
 
   return (
     <AppContext.Provider value={state}>

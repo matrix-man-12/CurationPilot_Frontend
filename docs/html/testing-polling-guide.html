@@ -8,6 +8,7 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="style.css">
+  <link rel="icon" type="image/svg+xml" href="../../public/favicon.svg">
   <!-- Load Mermaid via CDN -->
   <script src="https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.min.js"></script>
   <script>
@@ -31,7 +32,16 @@
     <!-- Sidebar Navigation -->
     <aside class="sidebar">
       <div class="sidebar-brand">
-        <span class="brand-logo">🎛️</span>
+        <svg width="24" height="24" viewBox="0 0 28 28" fill="none" style="flex-shrink: 0;" aria-hidden="true">
+          <rect width="28" height="28" rx="8" fill="var(--color-primary)" />
+          <path
+            d="M8 14C8 10.6863 10.6863 8 14 8C17.3137 8 20 10.6863 20 14"
+            stroke="white"
+            stroke-width="2.5"
+            stroke-linecap="round"
+          />
+          <circle cx="14" cy="17" r="2" fill="white" />
+        </svg>
         <span class="brand-name">CurationPilot</span>
       </div>
       <div class="sidebar-version">v1.1.0 · Docs</div>
@@ -42,6 +52,7 @@
         <a href="api-specification.html" class="nav-item" id="nav-api-specification">REST API Spec</a>
         <a href="testing-polling-guide.html" class="nav-item active" id="nav-testing-polling-guide">Polling Testing Guide</a>
         <a href="websocket-specification.html" class="nav-item" id="nav-websocket-specification">WebSocket Spec</a>
+        <a href="backend-integration-guide.html" class="nav-item" id="nav-backend-integration-guide">Backend Design Guide</a>
       </nav>
     </aside>
 
@@ -142,38 +153,22 @@
           <!-- Live Mermaid Rendering -->
           <div class="mermaid">
             stateDiagram-v2
-                [*] --> Submitted: POST /api/executions
-                Submitted --> Queued: Returns exec_id
+                [*] --> Submitted : "POST /api/executions"
+                Submitted --> Queued : "Returns exec_id"
+                Queued --> Running : "Poll detects running"
                 
-                state PollingLoop {
-                    Queued --> Running: Poll detects "running"
-                    Running --> Running: Poll updates logs/progress
-                    
-                    Running --> Paused: POST .../pause
-                    note right of Paused
-                        Frontend stops polling.
-                        Awaiting manual resume.
-                    end note
-                    
-                    Paused --> Running: POST .../resume
-                    note right of Running
-                        Frontend restarts polling.
-                    end note
-                    
-                    Running --> WaitingForUser: Playwright reaches HITL check
-                    note right of WaitingForUser
-                        Frontend stops polling.
-                        Awaiting manual Approve/Reject.
-                    end note
-                    
-                    WaitingForUser --> Running: POST .../approve (Resumes)
-                    WaitingForUser --> Failed: POST .../reject (Rejects)
-                }
-
-                Running --> Completed: Poll detects "completed"
-                Running --> Failed: Poll detects "failed"
-                Running --> Cancelled: POST .../cancel
-                Paused --> Cancelled: POST .../cancel
+                Running --> Running : "Poll updates logs/progress"
+                Running --> Paused : "POST /api/executions/:id/pause"
+                Paused --> Running : "POST /api/executions/:id/resume"
+                
+                Running --> WaitingForUser : "Playwright reaches HITL check"
+                WaitingForUser --> Running : "POST /api/executions/:id/approve"
+                WaitingForUser --> Failed : "POST /api/executions/:id/reject"
+                
+                Running --> Completed : "Poll detects completed"
+                Running --> Failed : "Poll detects failed"
+                Running --> Cancelled : "POST /api/executions/:id/cancel"
+                Paused --> Cancelled : "POST /api/executions/:id/cancel"
                 
                 Completed --> [*]
                 Failed --> [*]

@@ -8,6 +8,7 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="style.css">
+  <link rel="icon" type="image/svg+xml" href="../../public/favicon.svg">
   <style>
     /* Custom style swatches for this page specifically */
     .color-grid {
@@ -134,7 +135,16 @@
     <!-- Sidebar Navigation -->
     <aside class="sidebar">
       <div class="sidebar-brand">
-        <span class="brand-logo">🎛️</span>
+        <svg width="24" height="24" viewBox="0 0 28 28" fill="none" style="flex-shrink: 0;" aria-hidden="true">
+          <rect width="28" height="28" rx="8" fill="var(--color-primary)" />
+          <path
+            d="M8 14C8 10.6863 10.6863 8 14 8C17.3137 8 20 10.6863 20 14"
+            stroke="white"
+            stroke-width="2.5"
+            stroke-linecap="round"
+          />
+          <circle cx="14" cy="17" r="2" fill="white" />
+        </svg>
         <span class="brand-name">CurationPilot</span>
       </div>
       <div class="sidebar-version">v1.1.0 · Docs</div>
@@ -145,6 +155,7 @@
         <a href="api-specification.html" class="nav-item" id="nav-api-specification">REST API Spec</a>
         <a href="testing-polling-guide.html" class="nav-item" id="nav-testing-polling-guide">Polling Testing Guide</a>
         <a href="websocket-specification.html" class="nav-item" id="nav-websocket-specification">WebSocket Spec</a>
+        <a href="backend-integration-guide.html" class="nav-item" id="nav-backend-integration-guide">Backend Design Guide</a>
       </nav>
     </aside>
 

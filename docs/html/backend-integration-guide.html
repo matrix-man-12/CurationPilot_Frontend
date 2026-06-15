@@ -1,0 +1,287 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Backend Integration Guide — CurationPilot Docs</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css">
+  <link rel="icon" type="image/svg+xml" href="../../public/favicon.svg">
+  <!-- Load Mermaid via CDN -->
+  <script src="https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.min.js"></script>
+  <script>
+    mermaid.initialize({
+      startOnLoad: true,
+      theme: 'neutral',
+      securityLevel: 'loose',
+      themeVariables: {
+        fontFamily: 'Inter, sans-serif',
+        fontSize: '13px',
+        lineColor: '#8C7E73',
+        primaryColor: '#FEF0E7',
+        primaryTextColor: '#3D3229',
+        secondaryColor: '#F0F7F4'
+      }
+    });
+  </script>
+</head>
+<body>
+  <div class="layout-container">
+    <!-- Sidebar Navigation -->
+    <aside class="sidebar">
+      <div class="sidebar-brand">
+        <svg width="24" height="24" viewBox="0 0 28 28" fill="none" style="flex-shrink: 0;" aria-hidden="true">
+          <rect width="28" height="28" rx="8" fill="var(--color-primary)" />
+          <path
+            d="M8 14C8 10.6863 10.6863 8 14 8C17.3137 8 20 10.6863 20 14"
+            stroke="white"
+            stroke-width="2.5"
+            stroke-linecap="round"
+          />
+          <circle cx="14" cy="17" r="2" fill="white" />
+        </svg>
+        <span class="brand-name">CurationPilot</span>
+      </div>
+      <div class="sidebar-version">v1.1.0 · Docs</div>
+      <nav class="sidebar-nav">
+        <a href="project-overview.html" class="nav-item" id="nav-project-overview">Overview</a>
+        <a href="architecture.html" class="nav-item" id="nav-architecture">Architecture</a>
+        <a href="design-system.html" class="nav-item" id="nav-design-system">Design System</a>
+        <a href="api-specification.html" class="nav-item" id="nav-api-specification">REST API Spec</a>
+        <a href="testing-polling-guide.html" class="nav-item" id="nav-testing-polling-guide">Polling Testing Guide</a>
+        <a href="websocket-specification.html" class="nav-item" id="nav-websocket-specification">WebSocket Spec</a>
+        <a href="backend-integration-guide.html" class="nav-item active" id="nav-backend-integration-guide">Backend Design Guide</a>
+      </nav>
+    </aside>
+
+    <!-- Main Content Panel -->
+    <main class="main-content">
+      <article class="content-article">
+        <h1>Backend Integration & System Design Guide</h1>
+        
+        <div class="meta-block">
+          <div class="meta-item">
+            <span class="meta-label">For:</span>
+            <span>Backend & Infrastructure Teams</span>
+          </div>
+          <div class="meta-item">
+            <span class="meta-label">Version:</span>
+            <span>1.0.0</span>
+          </div>
+        </div>
+
+        <section>
+          <h2>1. Local Loopback & CORS Configuration (Local-Only Execution)</h2>
+          <p>Since this platform runs entirely locally on the user's own machine, the frontend (Vite dev server) and backend API server run on different local ports during development:</p>
+          <ul>
+            <li><strong>Frontend dev server URL:</strong> <code>http://localhost:5173</code></li>
+            <li><strong>Backend API URL:</strong> <code>http://localhost:8080/api</code></li>
+          </ul>
+
+          <div class="alert alert-important">
+            <div class="alert-title">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12.01" y2="8"/><path d="M12 12v4"/></svg>
+              Cross-Origin Resource Sharing (CORS) Requirement
+            </div>
+            <p style="margin: 0;">Because the browser blocks Cross-Origin HTTP requests by default, the backend API server (running on port 8080) <strong>MUST enable CORS</strong> to explicitly authorize incoming requests from <code>http://localhost:5173</code>. If CORS headers are omitted, all frontend fetches, status polling, and control calls will be blocked by the browser.</p>
+          </div>
+
+          <h3>CORS Header Requirements</h3>
+          <p>The backend must respond to all preflight and API requests with these headers:</p>
+          <pre><code>Access-Control-Allow-Origin: http://localhost:5173
+Access-Control-Allow-Methods: GET, POST, OPTIONS
+Access-Control-Allow-Headers: Content-Type, Authorization</code></pre>
+        </section>
+
+        <section>
+          <h2>2. Single Page Application (SPA) Routing Fallback</h2>
+          <p>The CurationPilot React frontend uses standard HTML5 client-side history routing for URL paths such as <code>/history</code> and <code>/logs</code>.</p>
+          
+          <div class="alert alert-important">
+            <div class="alert-title">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12.01" y2="8"/><path d="M12 12v4"/></svg>
+              Server Rewrite Requirement
+            </div>
+            <p style="margin: 0;">When serving the static React build, the production server (Nginx, Express, etc.) must rewrite any requests that do not map to static files or API endpoints to serve <code>index.html</code>. If this fallback is omitted, users refreshing on pages other than the homepage will encounter a <strong>404 Not Found</strong> error.</p>
+          </div>
+
+          <h3>A. Nginx Server Configuration</h3>
+          <pre><code>server {
+    listen 80;
+    server_name automation.curationpilot.com;
+    root /var/www/curationpilot/dist;
+    index index.html;
+
+    # Static assets fallback rewrite
+    location / {
+        try_files $uri $uri/ /index.html;
+    }
+
+    # Proxy REST API requests to backend
+    location /api/ {
+        proxy_pass http://localhost:8080/api/;
+        proxy_http_version 1.1;
+        proxy_set_header Upgrade $http_upgrade;
+        proxy_set_header Connection 'upgrade';
+        proxy_set_header Host $host;
+        proxy_cache_bypass $http_upgrade;
+    }
+}</code></pre>
+
+          <h3>B. Node.js Express Static Serve with CORS</h3>
+          <pre><code>const express = require('express');
+const cors = require('cors');
+const path = require('path');
+const app = express();
+
+// Enable CORS for local frontend dev server
+app.use(cors({
+  origin: 'http://localhost:5173',
+  methods: ['GET', 'POST', 'OPTIONS']
+}));
+
+// Serve API endpoints
+app.use('/api', apiRouter);
+
+// Serve static compiled assets
+app.use(express.static(path.join(__dirname, 'dist')));
+
+// Fallback all routes to index.html for React routing
+app.get('*', (req, res) => {
+  res.sendFile(path.join(__dirname, 'dist', 'index.html'));
+});
+
+app.listen(8080);</code></pre>
+        </section>
+
+        <section>
+          <h2>3. Playwright Automation Runner Design</h2>
+          <p>To support the dashboard's status controls and log streams, the backend Playwright run controller should adhere to the following machine layout:</p>
+
+          <h3>A. Execution State Machine</h3>
+          
+          <!-- Live Mermaid Diagram -->
+          <div class="mermaid">
+            stateDiagram-v2
+                [*] --> queued : "POST /api/executions (returns exec_id)"
+                queued --> running : "Worker thread allocated"
+                running --> running : "Poll updates logs & progress"
+                running --> paused : "POST /api/executions/:id/pause"
+                paused --> running : "POST /api/executions/:id/resume"
+                running --> waiting_for_user : "Playwright hits HITL node"
+                waiting_for_user --> running : "POST /api/executions/:id/approve"
+                waiting_for_user --> failed : "POST /api/executions/:id/reject"
+                running --> completed : "Poll detects completed"
+                running --> failed : "Poll detects failed"
+                running --> cancelled : "POST /api/executions/:id/cancel"
+                paused --> cancelled : "POST /api/executions/:id/cancel"
+                completed --> [*]
+                failed --> [*]
+                cancelled --> [*]
+          </div>
+
+          <h3>B. State Descriptions & Requirements</h3>
+          <table>
+            <thead>
+              <tr>
+                <th>Status</th>
+                <th>Playwright Worker Thread Requirements</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td><code>queued</code></td>
+                <td>Placed in an in-memory queue. No browser instance is launched yet.</td>
+              </tr>
+              <tr>
+                <td><code>running</code></td>
+                <td>Allocated worker instance, browser context opened, executing automation step script loops.</td>
+              </tr>
+              <tr>
+                <td><code>paused</code></td>
+                <td>Worker thread execution suspended. **Keep browser context open.** Use Promise resolvers to block progression.</td>
+              </tr>
+              <tr>
+                <td><code>waiting_for_user</code></td>
+                <td>HITL validation node reached. Halted awaiting user approval or rejection HTTP calls.</td>
+              </tr>
+              <tr>
+                <td><code>completed</code></td>
+                <td>Task completed (exit code 0). Clean up assets, close browser, serialize output result object.</td>
+              </tr>
+              <tr>
+                <td><code>failed</code></td>
+                <td>Script crashed, timed out, or user rejected HITL. Store error message and screenshot path.</td>
+              </tr>
+              <tr>
+                <td><code>cancelled</code></td>
+                <td>Receive cancel payload. Close browser immediately, free workers, set status.</td>
+              </tr>
+            </tbody>
+          </table>
+        </section>
+
+        <section>
+          <h2>4. Bulk CSV Execution Mapping</h2>
+          <p>Bulk execution requests are submitted as a single POST body with an array of objects in the parameters:</p>
+          <pre><code>{
+  "skillId": "skill_001",
+  "parameters": {
+    "isBulk": true,
+    "rowCount": 3,
+    "csvRows": [
+      { "portal_url": "https://company-a.com", "vendor_ids": ["V1"] },
+      { "portal_url": "https://company-b.com", "vendor_ids": ["V2"] },
+      { "portal_url": "https://company-c.com", "vendor_ids": ["V3"] }
+    ],
+    "portal_url": "https://company-a.com",
+    "vendor_ids": ["V1"]
+  }
+}</code></pre>
+
+          <h3>Backend Requirements for Bulk Execution</h3>
+          <ul>
+            <li><strong>Batch Processing</strong>: Process the <code>csvRows</code> sequentially or load them into parallel worker slots according to server resource limits.</li>
+            <li><strong>Log Output</strong>: Format the stdout log strings to include row indicators: <code>"[Row 2/3] Automating browser search..."</code>.</li>
+            <li><strong>Progress Scale</strong>: Set <code>totalSteps</code> proportional to the size of the batch (e.g. <code>rowCount * stepsPerRow</code>), so progress percentages advance smoothly.</li>
+          </ul>
+        </section>
+
+        <section>
+          <h2>5. Log Serialization Format</h2>
+          <p>Logs streamed inside the execution status must follow this exact layout:</p>
+          <pre><code>"logs": [
+  {
+    "timestamp": "2026-06-15T10:30:02.123Z",
+    "level": "info",
+    "message": "Initializing browser context..."
+  },
+  {
+    "timestamp": "2026-06-15T10:30:05.456Z",
+    "level": "warn",
+    "message": "Execution paused by user"
+  }
+]</code></pre>
+          <ul>
+            <li><strong>Timestamps</strong>: ISO 8601 string including milliseconds to maintain order during sorting.</li>
+            <li><strong>Levels</strong>: Restrict to <code>info</code>, <code>warn</code>, <code>error</code>, or <code>debug</code>.</li>
+            <li><strong>Storage</strong>: Store log arrays associated with the execution ID in a database (e.g. MongoDB or PostgreSQL) so history views can query logs of completed runs.</li>
+          </ul>
+        </section>
+
+        <section>
+          <h2>6. Control API Contract Requirements</h2>
+          <p>All control and HITL endpoints must update the running state machine and <strong>return the fully-updated execution status object in the response body</strong> (matching the structure of <code>GET /api/executions/:id</code>).</p>
+          
+          <div class="alert alert-note">
+            <div class="alert-title">Visual Delay Avoidance</div>
+            Returning the full execution record immediately ensures that the React frontend updates progress bars and logs instantaneously upon user click, preventing a 1.5s visual delay.
+          </div>
+        </section>
+      </article>
+    </main>
+  </div>
+</body>
+</html>
