@@ -123,8 +123,10 @@ export default function MessageBubble({ message, isLast, sessionStatus }) {
     }
   };
 
+  const isLargeContainer = ['params_submitted', 'executing', 'completed', 'failed'].includes(content);
+
   return (
-    <div className={`message-bubble message-bubble--${type} ${content === 'params_submitted' ? 'message-bubble--params-summary' : ''}`}>
+    <div className={`message-bubble message-bubble--${type} ${isLargeContainer ? 'message-bubble--large' : ''} ${content === 'params_submitted' ? 'message-bubble--params-summary' : ''}`}>
       {type === 'system' && (
         <div className="msg-avatar msg-avatar--system" aria-hidden="true">
           <svg width="18" height="18" viewBox="0 0 18 18" fill="none">
@@ -138,7 +140,7 @@ export default function MessageBubble({ message, isLast, sessionStatus }) {
           </svg>
         </div>
       )}
-      {type === 'user' && content !== 'params_submitted' && (
+      {type === 'user' && (
         <div className="msg-avatar msg-avatar--user" aria-hidden="true">
           <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
             <circle cx="8" cy="5.5" r="3" stroke="white" strokeWidth="1.5" />

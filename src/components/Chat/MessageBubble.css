@@ -280,7 +280,6 @@
 }
 
 .message-bubble--params-summary {
-  flex-direction: row !important;
   width: 100%;
 }
 
@@ -288,6 +287,14 @@
   background: transparent !important;
   box-shadow: none !important;
   padding: 0 !important;
-  max-width: 100% !important;
-  flex: 1;
+}
+
+.message-bubble--large {
+  width: 100%;
+}
+
+.message-bubble--large .msg-content {
+  width: calc(90% - 48px) !important;
+  max-width: calc(90% - 48px) !important;
+  flex: none !important;
 }
