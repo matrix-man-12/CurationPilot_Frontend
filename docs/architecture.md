@@ -6,7 +6,7 @@
 App
 ├── AppHeader
 │   ├── Logo + Title
-│   └── Navigation (Chat / History toggle)
+│   └── Navigation (Chat / History / Logs tabs)
 │
 ├── ChatView (when nav = "chat")
 │   └── ChatContainer
@@ -22,11 +22,15 @@ App
 │       │       └── ExecutionStatus (progress bar, logs, result)
 │       └── (no input bar — all interaction happens via components in messages)
 │
-└── HistoryView (when nav = "history")
-    ├── SearchBar
-    └── SessionList
-        └── SessionCard (skill name, date, status)
-            └── onClick → loads session into ChatView
+├── HistoryView (when nav = "history")
+│   ├── SearchBar
+│   └── SessionList
+│       └── SessionCard (skill name, date, status)
+│           └── onClick → loads session into ChatView
+│
+└── LogsView (when nav = "logs")
+    ├── Toolbar (filters, pause/resume, clear)
+    └── Monospace logs viewport
 ```
 
 ## State Architecture
@@ -34,7 +38,7 @@ App
 ```
 AppContext (React Context)
 │
-├── currentView: "chat" | "history"
+├── currentView: "chat" | "history" | "logs"
 ├── activeSession: {
 │     id, skillId, skillName, messages[], status, parameters, result
 │   }
@@ -68,33 +72,36 @@ Click history item   →  LOAD_SESSION     →  activeSession      →  Restore 
 ```
 src/
 ├── components/
-│   ├── Layout/
-│   │   ├── AppHeader.jsx
-│   │   └── AppHeader.css
-│   ├── Chat/
-│   │   ├── ChatContainer.jsx
-│   │   ├── ChatContainer.css
-│   │   ├── MessageBubble.jsx
-│   │   ├── MessageBubble.css
-│   │   ├── SkillSelector.jsx
-│   │   ├── SkillSelector.css
-│   │   ├── ParameterForm.jsx
-│   │   ├── ParameterForm.css
-│   │   ├── ExecutionStatus.jsx
-│   │   └── ExecutionStatus.css
-│   ├── History/
-│   │   ├── HistoryView.jsx
-│   │   ├── HistoryView.css
-│   │   ├── SessionCard.jsx
-│   │   └── SessionCard.css
-│   └── common/
-│       ├── Button.jsx
-│       ├── Button.css
-│       ├── Input.jsx
-│       ├── Input.css
-│       ├── Select.jsx
-│       ├── Select.css
-│       └── Spinner.jsx
+├── Layout/
+│   ├── AppHeader.jsx
+│   └── AppHeader.css
+├── Chat/
+│   ├── ChatContainer.jsx
+│   ├── ChatContainer.css
+│   ├── MessageBubble.jsx
+│   ├── MessageBubble.css
+│   ├── SkillSelector.jsx
+│   ├── SkillSelector.css
+│   ├── ParameterForm.jsx
+│   ├── ParameterForm.css
+│   ├── ExecutionStatus.jsx
+│   └── ExecutionStatus.css
+├── History/
+│   ├── HistoryView.jsx
+│   ├── HistoryView.css
+│   ├── SessionCard.jsx
+│   └── SessionCard.css
+├── Logs/
+│   ├── LogsView.jsx
+│   └── LogsView.css
+├── common/
+│   ├── Button.jsx
+│   ├── Button.css
+│   ├── Input.jsx
+│   ├── Input.css
+│   ├── Select.jsx
+│   ├── Select.css
+│   └── Spinner.jsx
 ├── context/
 │   └── AppContext.jsx
 ├── hooks/

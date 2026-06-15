@@ -28,6 +28,19 @@
   font-size: var(--text-sm);
   color: var(--color-text);
   background: transparent;
+  outline: none;
+  border: none;
+  box-shadow: none;
+}
+
+.skill-search-input:focus {
+  outline: none;
+  border: none;
+  box-shadow: none;
+}
+
+.skill-search-wrapper:focus-within {
+  border-bottom-color: var(--color-primary);
 }
 
 .skill-search-input::placeholder {
@@ -81,7 +94,7 @@
 
 .skill-category-name {
   font-size: var(--text-sm);
-  font-weight: var(--weight-semibold);
+  font-weight: var(--weight-bold);
   color: var(--color-text);
 }
 
@@ -133,7 +146,7 @@
 
 .skill-item-name {
   font-size: var(--text-sm);
-  font-weight: var(--weight-medium);
+  font-weight: var(--weight-semibold);
   color: var(--color-text);
 }
 

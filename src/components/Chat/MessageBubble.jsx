@@ -12,15 +12,15 @@ export default function MessageBubble({ message, isLast, sessionStatus }) {
         return (
           <div className="msg-welcome">
             <div className="msg-welcome-icon">
-              <svg width="32" height="32" viewBox="0 0 32 32" fill="none" aria-hidden="true">
-                <circle cx="16" cy="16" r="14" fill="var(--color-primary-soft)" />
+              <svg width="40" height="40" viewBox="0 0 40 40" fill="none" aria-hidden="true">
+                <rect width="40" height="40" rx="12" fill="var(--color-primary)" />
                 <path
-                  d="M10 16C10 12.6863 12.6863 10 16 10C19.3137 10 22 12.6863 22 16"
-                  stroke="var(--color-primary)"
-                  strokeWidth="2"
+                  d="M12 20C12 15.5817 15.5817 12 20 12C24.4183 12 28 15.5817 28 20"
+                  stroke="white"
+                  strokeWidth="2.5"
                   strokeLinecap="round"
                 />
-                <circle cx="16" cy="19" r="1.5" fill="var(--color-primary)" />
+                <circle cx="20" cy="24" r="2" fill="white" />
               </svg>
             </div>
             <div className="msg-welcome-text">
@@ -71,9 +71,9 @@ export default function MessageBubble({ message, isLast, sessionStatus }) {
         return (
           <div className="msg-result msg-result--success">
             <div className="msg-result-header">
-              <svg width="20" height="20" viewBox="0 0 20 20" fill="none" aria-hidden="true">
-                <circle cx="10" cy="10" r="8" fill="var(--color-success-soft)" stroke="var(--color-success)" strokeWidth="1.5" />
-                <polyline points="7,10 9.5,12.5 13.5,7.5" stroke="var(--color-success)" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+              <svg width="22" height="22" viewBox="0 0 22 22" fill="none" aria-hidden="true">
+                <circle cx="11" cy="11" r="9" fill="var(--color-success)" />
+                <polyline points="7,11 10,14 15,8" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
               </svg>
               <span>Completed successfully</span>
             </div>
@@ -99,10 +99,10 @@ export default function MessageBubble({ message, isLast, sessionStatus }) {
         return (
           <div className="msg-result msg-result--error">
             <div className="msg-result-header">
-              <svg width="20" height="20" viewBox="0 0 20 20" fill="none" aria-hidden="true">
-                <circle cx="10" cy="10" r="8" fill="var(--color-error-soft)" stroke="var(--color-error)" strokeWidth="1.5" />
-                <line x1="7.5" y1="7.5" x2="12.5" y2="12.5" stroke="var(--color-error)" strokeWidth="1.5" strokeLinecap="round" />
-                <line x1="12.5" y1="7.5" x2="7.5" y2="12.5" stroke="var(--color-error)" strokeWidth="1.5" strokeLinecap="round" />
+              <svg width="22" height="22" viewBox="0 0 22 22" fill="none" aria-hidden="true">
+                <circle cx="11" cy="11" r="9" fill="var(--color-error)" />
+                <line x1="8" y1="8" x2="14" y2="14" stroke="white" strokeWidth="2" strokeLinecap="round" />
+                <line x1="14" y1="8" x2="8" y2="14" stroke="white" strokeWidth="2" strokeLinecap="round" />
               </svg>
               <span>Execution failed</span>
             </div>
@@ -124,11 +124,19 @@ export default function MessageBubble({ message, isLast, sessionStatus }) {
           <svg width="18" height="18" viewBox="0 0 18 18" fill="none">
             <path
               d="M5 9C5 6.79086 6.79086 5 9 5C11.2091 5 13 6.79086 13 9"
-              stroke="var(--color-primary)"
-              strokeWidth="1.5"
+              stroke="white"
+              strokeWidth="1.8"
               strokeLinecap="round"
             />
-            <circle cx="9" cy="11.5" r="1" fill="var(--color-primary)" />
+            <circle cx="9" cy="11.5" r="1.2" fill="white" />
+          </svg>
+        </div>
+      )}
+      {type === 'user' && (
+        <div className="msg-avatar msg-avatar--user" aria-hidden="true">
+          <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+            <circle cx="8" cy="5.5" r="3" stroke="white" strokeWidth="1.5" />
+            <path d="M2 14C2 11.2386 4.68629 9 8 9C11.3137 9 14 11.2386 14 14" stroke="white" strokeWidth="1.5" strokeLinecap="round" />
           </svg>
         </div>
       )}

@@ -4,31 +4,60 @@
   flex-direction: column;
   overflow: hidden;
   position: relative;
+  margin: 0;
+  background: var(--color-surface);
+  border: none;
+  border-radius: 0;
+  box-shadow: none;
 }
 
 .chat-readonly-banner {
   display: flex;
   align-items: center;
   gap: var(--space-2);
-  padding: var(--space-2) var(--space-4);
+  padding: var(--space-3) var(--space-5);
   background: var(--color-primary-soft);
-  color: var(--color-text-muted);
+  color: var(--color-primary-hover);
   font-size: var(--text-sm);
-  font-weight: var(--weight-medium);
+  font-weight: var(--weight-semibold);
   border-bottom: 1px solid var(--color-border);
   animation: fadeIn var(--transition-base);
+  border-radius: 0;
 }
 
 .chat-messages {
   flex: 1;
   overflow-y: auto;
-  padding: var(--space-6) var(--space-4);
+  padding: 0;
+  background: var(--color-surface);
+  display: flex;
+  flex-direction: column;
 }
 
 .chat-messages-inner {
+  width: 100%;
   max-width: var(--chat-max-width);
   margin: 0 auto;
+  flex: 1;
   display: flex;
   flex-direction: column;
-  gap: var(--space-4);
+  gap: var(--space-5);
+  background: var(--color-surface-raised);
+  border-left: 1px solid var(--color-border);
+  border-right: 1px solid var(--color-border);
+  padding: var(--space-8) var(--space-8);
+  box-sizing: border-box;
+  position: relative;
+  
+  /* Subtle SVG Dot Pattern */
+  background-image: url("data:image/svg+xml,%3Csvg width='24' height='24' viewBox='0 0 24 24' fill='none' xmlns='http://www.w3.org/2000/svg'%3E%3Ccircle cx='12' cy='12' r='1.2' fill='%23DDD4CB' fill-opacity='0.7'/%3E%3C/svg%3E");
+  background-repeat: repeat;
+}
+
+@media (max-width: 800px) {
+  .chat-messages-inner {
+    border-left: none;
+    border-right: none;
+    padding: var(--space-6) var(--space-4);
+  }
 }

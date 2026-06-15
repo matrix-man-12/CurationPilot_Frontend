@@ -1,12 +1,14 @@
 import { useState } from 'react';
 import { useAppState, useAppDispatch } from '../../context/AppContext';
 import SessionCard from './SessionCard';
+import ConfirmModal from '../common/ConfirmModal';
 import './HistoryView.css';
 
 export default function HistoryView() {
   const { sessions } = useAppState();
   const dispatch = useAppDispatch();
   const [search, setSearch] = useState('');
+  const [deleteTarget, setDeleteTarget] = useState(null);
 
   const filteredSessions = sessions.filter((session) => {
     if (!search.trim()) return true;
@@ -21,13 +23,24 @@ export default function HistoryView() {
     dispatch({ type: 'LOAD_SESSION', payload: sessionId });
   }
 
-  function handleDeleteSession(sessionId) {
-    dispatch({ type: 'DELETE_SESSION', payload: sessionId });
+  function handleRequestDelete(session) {
+    setDeleteTarget(session);
+  }
+
+  function handleConfirmDelete() {
+    if (deleteTarget) {
+      dispatch({ type: 'DELETE_SESSION', payload: deleteTarget.id });
+      setDeleteTarget(null);
+    }
+  }
+
+  function handleCancelDelete() {
+    setDeleteTarget(null);
   }
 
   return (
     <div className="history-view" id="history-view">
-      <div className="history-inner">
+      <div className="history-panel">
         <div className="history-header">
           <h2 className="history-title">Session History</h2>
           <p className="history-subtitle">
@@ -58,10 +71,10 @@ export default function HistoryView() {
               {sessions.length === 0 ? (
                 <>
                   <div className="history-empty-icon">
-                    <svg width="48" height="48" viewBox="0 0 48 48" fill="none" aria-hidden="true">
-                      <circle cx="24" cy="24" r="20" stroke="var(--color-border)" strokeWidth="2" strokeDasharray="4 4" />
-                      <circle cx="24" cy="24" r="8" stroke="var(--color-text-muted)" strokeWidth="1.5" />
-                      <polyline points="24,20 24,24 27,26" stroke="var(--color-text-muted)" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+                    <svg width="56" height="56" viewBox="0 0 56 56" fill="none" aria-hidden="true">
+                      <circle cx="28" cy="28" r="24" stroke="var(--color-border)" strokeWidth="2" strokeDasharray="4 4" />
+                      <circle cx="28" cy="28" r="10" stroke="var(--color-text-muted)" strokeWidth="1.5" />
+                      <polyline points="28,22 28,28 32,30" stroke="var(--color-text-muted)" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
                     </svg>
                   </div>
                   <p className="history-empty-title">No sessions yet</p>
@@ -79,13 +92,25 @@ export default function HistoryView() {
                 key={session.id}
                 session={session}
                 onSelect={() => handleSelectSession(session.id)}
-                onDelete={() => handleDeleteSession(session.id)}
+                onDelete={() => handleRequestDelete(session)}
                 style={{ animationDelay: `${index * 40}ms` }}
               />
             ))
           )}
         </div>
       </div>
+
+      {deleteTarget && (
+        <ConfirmModal
+          title="Delete session?"
+          message={`This will permanently remove the "${deleteTarget.skillName || 'Untitled'}" session and all its data. This action cannot be undone.`}
+          confirmLabel="Delete"
+          cancelLabel="Keep it"
+          variant="danger"
+          onConfirm={handleConfirmDelete}
+          onCancel={handleCancelDelete}
+        />
+      )}
     </div>
   );
 }
