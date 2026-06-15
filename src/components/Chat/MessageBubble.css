@@ -69,10 +69,6 @@
   gap: var(--space-4);
 }
 
-.msg-welcome-icon {
-  animation: scaleIn var(--transition-slow) ease;
-}
-
 .msg-welcome-text h2 {
   font-size: var(--text-xl);
   font-weight: var(--weight-bold);

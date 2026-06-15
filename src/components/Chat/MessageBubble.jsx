@@ -11,18 +11,6 @@ export default function MessageBubble({ message, isLast, sessionStatus }) {
       case 'welcome':
         return (
           <div className="msg-welcome">
-            {/* <div className="msg-welcome-icon">
-              <svg width="40" height="40" viewBox="0 0 40 40" fill="none" aria-hidden="true">
-                <rect width="40" height="40" rx="12" fill="var(--color-primary)" />
-                <path
-                  d="M12 20C12 15.5817 15.5817 12 20 12C24.4183 12 28 15.5817 28 20"
-                  stroke="white"
-                  strokeWidth="2.5"
-                  strokeLinecap="round"
-                />
-                <circle cx="20" cy="24" r="2" fill="white" />
-              </svg>
-            </div> */}
             <div className="msg-welcome-text">
               <h2>What would you like to automate?</h2>
               <p>Select a skill below to get started. Each skill runs a specific automation task — you'll provide the parameters, and we'll handle the rest.</p>
