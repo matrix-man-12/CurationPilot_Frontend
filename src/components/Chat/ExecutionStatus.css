@@ -283,3 +283,62 @@
   color: var(--color-text);
   word-break: break-word;
 }
+
+.exec-pulse--held {
+  background: var(--color-warning);
+  animation: execPulseHeld 1.5s ease-in-out infinite;
+}
+
+@keyframes execPulseHeld {
+  0%, 100% {
+    box-shadow: 0 0 0 0 rgba(228, 184, 124, 0.5);
+  }
+  50% {
+    box-shadow: 0 0 0 6px rgba(228, 184, 124, 0);
+  }
+}
+
+.exec-header-controls {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+.exec-btn-control {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 4px var(--space-2);
+  font-size: 0.65rem;
+  font-weight: var(--weight-bold);
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--color-border);
+  background: var(--color-surface-raised);
+  color: var(--color-text-muted);
+  cursor: pointer;
+  transition: all var(--transition-fast);
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+}
+
+.exec-btn-control svg {
+  flex-shrink: 0;
+}
+
+.exec-btn-control--pause:hover {
+  background: var(--color-warning-soft);
+  border-color: var(--color-warning);
+  color: var(--color-warning);
+}
+
+.exec-btn-control--resume:hover {
+  background: var(--color-success-soft);
+  border-color: var(--color-success);
+  color: var(--color-success);
+}
+
+.exec-btn-control--cancel:hover {
+  background: var(--color-error-soft);
+  border-color: var(--color-error);
+  color: var(--color-error);
+}

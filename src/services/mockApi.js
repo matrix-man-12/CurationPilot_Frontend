@@ -122,17 +122,22 @@ function saveExecutionStore() {
   }
 }
 
-export function initExecution(executionId, skillName) {
+export function initExecution(executionId, skillName, parameters) {
+  const isBulk = parameters?.isBulk;
+  const csvRows = parameters?.csvRows || [];
+  const totalSteps = isBulk ? csvRows.length * 3 : EXECUTION_STEPS.length;
+
   executionStore.set(executionId, {
     executionId,
     status: 'queued',
     skillName,
     currentStep: 0,
-    totalSteps: EXECUTION_STEPS.length,
+    totalSteps: totalSteps,
     logs: [],
     startedAt: null,
     completedAt: null,
     userConfirmed: false,
+    parameters,
   });
   saveExecutionStore();
 }
@@ -160,8 +165,12 @@ export async function getExecutionStatus(executionId) {
     });
     saveExecutionStore();
   } else if (exec.status === 'running') {
-    // Trigger Human-in-the-loop state at step 4
-    if (exec.currentStep === 4 && !exec.userConfirmed) {
+    const isBulk = exec.parameters?.isBulk;
+    const csvRows = exec.parameters?.csvRows || [];
+    const totalRows = csvRows.length;
+
+    // Trigger Human-in-the-loop state at step 4 only for non-bulk runs
+    if (exec.currentStep === 4 && !exec.userConfirmed && !isBulk) {
       exec.status = 'waiting_for_user';
       exec.logs.push({
         timestamp: new Date().toISOString(),
@@ -171,35 +180,86 @@ export async function getExecutionStatus(executionId) {
       saveExecutionStore();
     } else {
       if (exec.currentStep < exec.totalSteps) {
-        const stepName = EXECUTION_STEPS[exec.currentStep];
-        exec.currentStep += 1;
-        exec.logs.push({
-          timestamp: new Date().toISOString(),
-          level: 'info',
-          message: `Step ${exec.currentStep}/${exec.totalSteps}: ${stepName}`,
-        });
+        if (isBulk) {
+          const rowIndex = Math.floor(exec.currentStep / 3);
+          const stepInRow = exec.currentStep % 3;
+          const rowData = csvRows[rowIndex];
+          
+          const rowIdentifier = rowData ? (rowData.contactId || rowData.searchQuery || Object.values(rowData)[0] || `Row ${rowIndex + 1}`) : `Row ${rowIndex + 1}`;
+          
+          let message = '';
+          if (stepInRow === 0) {
+            message = `[Row ${rowIndex + 1}/${totalRows}] Initializing execution for "${rowIdentifier}"`;
+          } else if (stepInRow === 1) {
+            message = `[Row ${rowIndex + 1}/${totalRows}] Automating browser search & form submission...`;
+          } else {
+            message = `[Row ${rowIndex + 1}/${totalRows}] Row automated successfully. Saving output.`;
+          }
+          
+          exec.currentStep += 1;
+          exec.logs.push({
+            timestamp: new Date().toISOString(),
+            level: 'info',
+            message: message,
+          });
+        } else {
+          const stepName = EXECUTION_STEPS[exec.currentStep];
+          exec.currentStep += 1;
+          exec.logs.push({
+            timestamp: new Date().toISOString(),
+            level: 'info',
+            message: `Step ${exec.currentStep}/${exec.totalSteps}: ${stepName}`,
+          });
+        }
       }
 
       if (exec.currentStep >= exec.totalSteps) {
         exec.status = 'completed';
         exec.completedAt = new Date().toISOString();
-        exec.logs.push({
-          timestamp: new Date().toISOString(),
-          level: 'info',
-          message: 'Execution completed successfully',
-        });
-        exec.result = {
-          summary: `Successfully completed "${exec.skillName}"`,
-          data: {
-            recordsProcessed: Math.floor(Math.random() * 50) + 10,
-            duration: `${Math.floor(Math.random() * 4) + 1}m ${Math.floor(Math.random() * 60)}s`,
-          },
-        };
+        if (isBulk) {
+          exec.logs.push({
+            timestamp: new Date().toISOString(),
+            level: 'info',
+            message: `Bulk execution completed: automated ${totalRows} rows successfully.`,
+          });
+          exec.result = {
+            summary: `Successfully completed bulk run of "${exec.skillName}" (${totalRows} items)`,
+            data: {
+              recordsProcessed: totalRows,
+              duration: `${Math.floor(totalRows * 0.1) + 1}m ${Math.floor(Math.random() * 60)}s`,
+            },
+          };
+        } else {
+          exec.logs.push({
+            timestamp: new Date().toISOString(),
+            level: 'info',
+            message: 'Execution completed successfully',
+          });
+          exec.result = {
+            summary: `Successfully completed "${exec.skillName}"`,
+            data: {
+              recordsProcessed: Math.floor(Math.random() * 50) + 10,
+              duration: `${Math.floor(Math.random() * 4) + 1}m ${Math.floor(Math.random() * 60)}s`,
+            },
+          };
+        }
       }
       saveExecutionStore();
     }
   } else if (exec.status === 'waiting_for_user') {
     // Keep it here until approve or reject is called
+  }
+
+  // Determine current step name for progress feedback
+  let currentStepName = '';
+  if (exec.status === 'waiting_for_user') {
+    currentStepName = 'Awaiting Human-in-the-loop approval';
+  } else if (exec.parameters?.isBulk) {
+    const csvRows = exec.parameters.csvRows || [];
+    const rowIndex = Math.min(Math.floor(exec.currentStep / 3), csvRows.length - 1);
+    currentStepName = `Processing Row ${rowIndex + 1} of ${csvRows.length}`;
+  } else {
+    currentStepName = EXECUTION_STEPS[Math.min(exec.currentStep, EXECUTION_STEPS.length - 1)];
   }
 
   return {
@@ -209,7 +269,7 @@ export async function getExecutionStatus(executionId) {
       progress: {
         currentStep: exec.currentStep,
         totalSteps: exec.totalSteps,
-        currentStepName: exec.status === 'waiting_for_user' ? 'Awaiting Human-in-the-loop approval' : EXECUTION_STEPS[Math.min(exec.currentStep, EXECUTION_STEPS.length - 1)],
+        currentStepName: currentStepName,
         percentage: Math.round((exec.currentStep / exec.totalSteps) * 100),
       },
     },
@@ -283,4 +343,42 @@ export async function rejectExecution(executionId) {
     return { success: true, data: exec };
   }
   return { success: false, error: { message: 'Execution not found' } };
+}
+
+/**
+ * Pause a running execution
+ */
+export async function pauseExecution(executionId) {
+  await delay(200);
+  const exec = executionStore.get(executionId);
+  if (exec && exec.status === 'running') {
+    exec.status = 'paused';
+    exec.logs.push({
+      timestamp: new Date().toISOString(),
+      level: 'warn',
+      message: 'Execution paused by user',
+    });
+    saveExecutionStore();
+    return { success: true, data: exec };
+  }
+  return { success: false, error: { message: 'Execution not found or not running' } };
+}
+
+/**
+ * Resume a paused execution
+ */
+export async function resumeExecution(executionId) {
+  await delay(200);
+  const exec = executionStore.get(executionId);
+  if (exec && exec.status === 'paused') {
+    exec.status = 'running';
+    exec.logs.push({
+      timestamp: new Date().toISOString(),
+      level: 'info',
+      message: 'Execution resumed by user',
+    });
+    saveExecutionStore();
+    return { success: true, data: exec };
+  }
+  return { success: false, error: { message: 'Execution not found or not paused' } };
 }

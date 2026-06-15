@@ -13,6 +13,8 @@ export {
   cancelExecution,
   approveExecution,
   rejectExecution,
+  pauseExecution,
+  resumeExecution,
 } from './mockApi.js';
 
 /**

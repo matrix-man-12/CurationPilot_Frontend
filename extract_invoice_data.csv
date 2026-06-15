@@ -1,0 +1,13 @@
+portal_url,date_range_start,date_range_end,vendor_ids
+https://invoices.company-a.com,2026-06-01,2026-06-15,"V001,V002"
+https://portal.invoice-hub.net,2026-05-01,2026-05-31,V009
+https://billing.acme-corp.com,2026-06-10,2026-06-12,"V003,V004,V005"
+https://invoices.company-b.com,2026-04-01,2026-04-30,V012
+https://billing.delta-tech.org,2026-06-01,2026-06-07,V042
+https://invoices.omega-group.co,2026-05-15,2026-06-15,V088
+https://portal.zenith-billing.net,2026-06-05,2026-06-10,"V101,V102"
+https://invoices.alpha-corp.com,2026-03-01,2026-03-31,V023
+https://billing.sigma-systems.com,2026-05-01,2026-05-15,V015
+https://invoices.global-logistics.com,2026-06-01,2026-06-14,"V501,V502"
+https://portal.prime-retail.org,2026-05-20,2026-05-27,V201
+https://billing.nexis-solutions.com,2026-06-12,2026-06-15,"V301,V302,V303"

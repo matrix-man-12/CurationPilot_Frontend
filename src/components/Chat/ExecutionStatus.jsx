@@ -1,6 +1,15 @@
 import { useState, useEffect, useRef } from 'react';
 import { useAppState, useAppDispatch } from '../../context/AppContext';
-import { submitExecution, initExecution, getExecutionStatus, approveExecution, rejectExecution } from '../../services/api';
+import {
+  submitExecution,
+  initExecution,
+  getExecutionStatus,
+  approveExecution,
+  rejectExecution,
+  cancelExecution,
+  pauseExecution,
+  resumeExecution
+} from '../../services/api';
 import './ExecutionStatus.css';
 
 export default function ExecutionStatus({ message }) {
@@ -43,7 +52,7 @@ export default function ExecutionStatus({ message }) {
       if (result.success) {
         const executionId = result.data.executionId;
         dispatch({ type: 'SET_EXECUTION_ID', payload: executionId });
-        initExecution(executionId, activeSession.skillName);
+        initExecution(executionId, activeSession.skillName, activeSession.parameters);
         pollStatus(executionId);
       }
     } catch (err) {
@@ -69,6 +78,10 @@ export default function ExecutionStatus({ message }) {
           return;
         }
         if (data.status === 'cancelled') {
+          return;
+        }
+        if (data.status === 'paused') {
+          // Stop polling while paused
           return;
         }
         if (data.status === 'waiting_for_user') {
@@ -115,25 +128,106 @@ export default function ExecutionStatus({ message }) {
     }
   }
 
+  async function handlePause() {
+    if (!activeSession.executionId) return;
+    try {
+      const response = await pauseExecution(activeSession.executionId);
+      if (response.success) {
+        setExecutionData(response.data);
+        dispatch({ type: 'UPDATE_LOGS', payload: response.data.logs || [] });
+        dispatch({ type: 'UPDATE_EXECUTION', payload: response.data });
+      }
+    } catch (err) {
+      console.error('Pause failed:', err);
+    }
+  }
+
+  async function handleResume() {
+    if (!activeSession.executionId) return;
+    try {
+      const response = await resumeExecution(activeSession.executionId);
+      if (response.success) {
+        setExecutionData(response.data);
+        dispatch({ type: 'UPDATE_LOGS', payload: response.data.logs || [] });
+        dispatch({ type: 'UPDATE_EXECUTION', payload: response.data });
+        // Resume polling
+        pollStatus(activeSession.executionId);
+      }
+    } catch (err) {
+      console.error('Resume failed:', err);
+    }
+  }
+
+  async function handleCancel() {
+    if (!activeSession.executionId) return;
+    try {
+      const response = await cancelExecution(activeSession.executionId);
+      if (response.success) {
+        setExecutionData(response.data);
+        dispatch({ type: 'UPDATE_LOGS', payload: response.data.logs || [] });
+        dispatch({ type: 'UPDATE_EXECUTION', payload: response.data });
+        dispatch({ type: 'FAIL_EXECUTION', payload: 'Execution cancelled by user' });
+      }
+    } catch (err) {
+      console.error('Cancel failed:', err);
+    }
+  }
+
   const progress = executionData?.progress;
 
   return (
     <div className="execution-status" id="execution-status">
       <div className="exec-header">
         <div className="exec-header-left">
-          <div className={`exec-pulse ${executionData?.status === 'waiting_for_user' ? 'exec-pulse--paused' : ''}`} />
+          <div className={`exec-pulse ${
+            executionData?.status === 'waiting_for_user'
+              ? 'exec-pulse--paused'
+              : executionData?.status === 'paused'
+              ? 'exec-pulse--held'
+              : ''
+          }`} />
           <span className="exec-title">
             {executionData?.status === 'waiting_for_user'
               ? `Approval Required`
+              : executionData?.status === 'paused'
+              ? `Paused — ${activeSession.skillName || 'automation'}`
               : executionData
               ? `Running ${activeSession.skillName || 'automation'}`
               : `Starting ${activeSession.skillName || 'automation'}`}
           </span>
         </div>
-        {executionData?.status === 'running' && (
-          <span className="exec-step-label">
-            Step {progress?.currentStep || 0} of {progress?.totalSteps || '...'}
-          </span>
+        
+        {activeSession.status === 'executing' && (executionData?.status === 'running' || executionData?.status === 'paused') ? (
+          <div className="exec-header-controls">
+            {executionData.status === 'running' ? (
+              <button type="button" className="exec-btn-control exec-btn-control--pause" onClick={handlePause} title="Pause Execution">
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor">
+                  <rect x="5" y="4" width="4" height="16" />
+                  <rect x="15" y="4" width="4" height="16" />
+                </svg>
+                <span>Pause</span>
+              </button>
+            ) : (
+              <button type="button" className="exec-btn-control exec-btn-control--resume" onClick={handleResume} title="Resume Execution">
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor">
+                  <polygon points="5 3 19 12 5 21" />
+                </svg>
+                <span>Resume</span>
+              </button>
+            )}
+            <button type="button" className="exec-btn-control exec-btn-control--cancel" onClick={handleCancel} title="Cancel Execution">
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor">
+                <rect x="4" y="4" width="16" height="16" rx="2" />
+              </svg>
+              <span>Cancel</span>
+            </button>
+          </div>
+        ) : (
+          executionData?.status === 'running' && (
+            <span className="exec-step-label">
+              Step {progress?.currentStep || 0} of {progress?.totalSteps || '...'}
+            </span>
+          )
         )}
       </div>
 
@@ -141,7 +235,11 @@ export default function ExecutionStatus({ message }) {
         <div className="exec-progress-wrapper">
           <div className="exec-progress-bar">
             <div
-              className={`exec-progress-fill ${executionData?.status === 'waiting_for_user' ? 'exec-progress-fill--paused' : ''}`}
+              className={`exec-progress-fill ${
+                executionData?.status === 'waiting_for_user' || executionData?.status === 'paused'
+                  ? 'exec-progress-fill--paused'
+                  : ''
+              }`}
               style={{ width: `${progress.percentage}%` }}
             />
           </div>
@@ -152,7 +250,7 @@ export default function ExecutionStatus({ message }) {
       {progress?.currentStepName && (
         <div className="exec-current-step">
           <svg width="14" height="14" viewBox="0 0 14 14" fill="none" aria-hidden="true">
-            <circle cx="7" cy="7" r="2.5" fill={executionData?.status === 'waiting_for_user' ? 'var(--color-error)' : 'var(--color-warning)'} />
+            <circle cx="7" cy="7" r="2.5" fill={executionData?.status === 'waiting_for_user' ? 'var(--color-error)' : (executionData?.status === 'paused' ? 'var(--color-warning)' : 'var(--color-warning)')} />
           </svg>
           {progress.currentStepName}
         </div>
