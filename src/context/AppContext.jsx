@@ -209,6 +209,18 @@ function appReducer(state, action) {
         sessions: state.sessions.filter((s) => s.id !== action.payload),
       };
 
+    case 'DELETE_SESSIONS':
+      return {
+        ...state,
+        sessions: state.sessions.filter((s) => !action.payload.includes(s.id)),
+      };
+
+    case 'CLEAR_HISTORY':
+      return {
+        ...state,
+        sessions: [],
+      };
+
     default:
       return state;
   }

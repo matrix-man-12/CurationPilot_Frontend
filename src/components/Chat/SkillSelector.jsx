@@ -37,6 +37,8 @@ export default function SkillSelector() {
         // Auto-expand all categories when searching
         if (searchTerm.trim()) {
           setExpandedCategories(new Set(response.data.categories.map((c) => c.id)));
+        } else {
+          setExpandedCategories(new Set());
         }
       }
     } catch (err) {
@@ -48,10 +50,9 @@ export default function SkillSelector() {
 
   function toggleCategory(categoryId) {
     setExpandedCategories((prev) => {
-      const next = new Set(prev);
-      if (next.has(categoryId)) {
-        next.delete(categoryId);
-      } else {
+      const next = new Set();
+      // Accordion style: only allow one category open at a time
+      if (!prev.has(categoryId)) {
         next.add(categoryId);
       }
       return next;
@@ -68,6 +69,11 @@ export default function SkillSelector() {
       },
     });
   }
+
+  const truncateDescription = (desc, limit = 70) => {
+    if (!desc) return '';
+    return desc.length > limit ? desc.slice(0, limit - 3) + '...' : desc;
+  };
 
   return (
     <div className="skill-selector" id="skill-selector">
@@ -151,11 +157,7 @@ export default function SkillSelector() {
                     >
                       <div className="skill-item-main">
                         <span className="skill-item-name">{skill.name}</span>
-                        <span className="skill-item-desc">{skill.description}</span>
-                      </div>
-                      <div className="skill-item-meta">
-                        <span className="skill-item-params">{skill.parameterCount} param{skill.parameterCount !== 1 ? 's' : ''}</span>
-                        <span className="skill-item-duration">{skill.estimatedDuration}</span>
+                        <span className="skill-item-desc">{truncateDescription(skill.description)}</span>
                       </div>
                       <svg
                         className="skill-item-arrow"

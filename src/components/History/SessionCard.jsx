@@ -1,6 +1,6 @@
 import './SessionCard.css';
 
-export default function SessionCard({ session, onSelect, onDelete, style }) {
+export default function SessionCard({ session, onSelect, onDelete, isSelected, onToggleSelect, style }) {
   const statusConfig = {
     completed: { label: 'Completed', className: 'status--success' },
     failed: { label: 'Failed', className: 'status--error' },
@@ -35,7 +35,7 @@ export default function SessionCard({ session, onSelect, onDelete, style }) {
 
   return (
     <div
-      className="session-card"
+      className={`session-card ${isSelected ? 'session-card--selected' : ''}`}
       style={style}
       role="button"
       tabIndex={0}
@@ -43,6 +43,19 @@ export default function SessionCard({ session, onSelect, onDelete, style }) {
       onKeyDown={(e) => e.key === 'Enter' && onSelect()}
       id={`session-${session.id}`}
     >
+      <div 
+        className="session-card-checkbox-wrapper"
+        onClick={(e) => e.stopPropagation()}
+      >
+        <input
+          type="checkbox"
+          checked={isSelected}
+          onChange={onToggleSelect}
+          className="session-checkbox"
+          aria-label={`Select ${session.skillName || 'Untitled Session'}`}
+        />
+      </div>
+
       <div className="session-card-main">
         <div className="session-card-top">
           <span className="session-card-name">
