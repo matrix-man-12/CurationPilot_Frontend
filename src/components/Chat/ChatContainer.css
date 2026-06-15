@@ -32,6 +32,28 @@
   background: var(--color-surface);
   display: flex;
   flex-direction: column;
+  scrollbar-width: thin;
+  scrollbar-color: var(--color-text-muted) var(--color-border);
+}
+
+/* Custom scrollbar to make scrolling clear and solid */
+.chat-messages::-webkit-scrollbar {
+  width: 10px;
+}
+
+.chat-messages::-webkit-scrollbar-track {
+  background: var(--color-surface);
+  border-left: 1px solid var(--color-border);
+}
+
+.chat-messages::-webkit-scrollbar-thumb {
+  background: var(--color-border);
+  border-radius: var(--radius-full);
+  border: 2px solid var(--color-surface);
+}
+
+.chat-messages::-webkit-scrollbar-thumb:hover {
+  background: var(--color-text-muted);
 }
 
 .chat-messages-inner {
