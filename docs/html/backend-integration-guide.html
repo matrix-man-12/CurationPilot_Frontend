@@ -10,7 +10,7 @@
   <link rel="stylesheet" href="style.css">
   <link rel="icon" type="image/svg+xml" href="../../public/favicon.svg">
   <!-- Load Mermaid via CDN -->
-  <script src="https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.min.js"></script>
+  <script src="mermaid.min.js"></script>
   <script>
     mermaid.initialize({
       startOnLoad: true,
@@ -165,18 +165,18 @@ app.listen(8080);</code></pre>
           <!-- Live Mermaid Diagram -->
           <div class="mermaid">
             stateDiagram-v2
-                [*] --> queued : "POST /api/executions (returns exec_id)"
-                queued --> running : "Worker thread allocated"
-                running --> running : "Poll updates logs & progress"
-                running --> paused : "POST /api/executions/:id/pause"
-                paused --> running : "POST /api/executions/:id/resume"
-                running --> waiting_for_user : "Playwright hits HITL node"
-                waiting_for_user --> running : "POST /api/executions/:id/approve"
-                waiting_for_user --> failed : "POST /api/executions/:id/reject"
-                running --> completed : "Poll detects completed"
-                running --> failed : "Poll detects failed"
-                running --> cancelled : "POST /api/executions/:id/cancel"
-                paused --> cancelled : "POST /api/executions/:id/cancel"
+                [*] --> queued : POST /api/executions (returns exec_id)
+                queued --> running : Worker thread allocated
+                running --> running : Poll updates logs and progress
+                running --> paused : POST /api/executions/{id}/pause
+                paused --> running : POST /api/executions/{id}/resume
+                running --> waiting_for_user : Playwright hits HITL node
+                waiting_for_user --> running : POST /api/executions/{id}/approve
+                waiting_for_user --> failed : POST /api/executions/{id}/reject
+                running --> completed : Poll detects completed
+                running --> failed : Poll detects failed
+                running --> cancelled : POST /api/executions/{id}/cancel
+                paused --> cancelled : POST /api/executions/{id}/cancel
                 completed --> [*]
                 failed --> [*]
                 cancelled --> [*]

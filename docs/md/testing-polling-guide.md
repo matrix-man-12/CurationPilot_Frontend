@@ -44,22 +44,22 @@ The following Mermaid diagram visualizes the frontend polling state machine:
 
 ```mermaid
 stateDiagram-v2
-    [*] --> Submitted : "POST /api/executions"
-    Submitted --> Queued : "Returns exec_id"
-    Queued --> Running : "Poll detects running"
+    [*] --> Submitted : POST /api/executions
+    Submitted --> Queued : Returns exec_id
+    Queued --> Running : Poll detects running
     
-    Running --> Running : "Poll updates logs/progress"
-    Running --> Paused : "POST /api/executions/:id/pause"
-    Paused --> Running : "POST /api/executions/:id/resume"
+    Running --> Running : Poll updates logs/progress
+    Running --> Paused : POST /api/executions/{id}/pause
+    Paused --> Running : POST /api/executions/{id}/resume
     
-    Running --> WaitingForUser : "Playwright reaches HITL check"
-    WaitingForUser --> Running : "POST /api/executions/:id/approve"
-    WaitingForUser --> Failed : "POST /api/executions/:id/reject"
+    Running --> WaitingForUser : Playwright reaches HITL check
+    WaitingForUser --> Running : POST /api/executions/{id}/approve
+    WaitingForUser --> Failed : POST /api/executions/{id}/reject
     
-    Running --> Completed : "Poll detects completed"
-    Running --> Failed : "Poll detects failed"
-    Running --> Cancelled : "POST /api/executions/:id/cancel"
-    Paused --> Cancelled : "POST /api/executions/:id/cancel"
+    Running --> Completed : Poll detects completed
+    Running --> Failed : Poll detects failed
+    Running --> Cancelled : POST /api/executions/{id}/cancel
+    Paused --> Cancelled : POST /api/executions/{id}/cancel
     
     Completed --> [*]
     Failed --> [*]

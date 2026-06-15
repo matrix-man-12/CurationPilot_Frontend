@@ -71,18 +71,18 @@ The backend must maintain the exact state transitions shown below:
 
 ```mermaid
 stateDiagram-v2
-    [*] --> queued : "POST /api/executions (returns exec_id)"
-    queued --> running : "Worker thread allocated"
-    running --> running : "Poll updates logs & progress"
-    running --> paused : "POST /api/executions/:id/pause"
-    paused --> running : "POST /api/executions/:id/resume"
-    running --> waiting_for_user : "Playwright hits HITL node"
-    waiting_for_user --> running : "POST /api/executions/:id/approve"
-    waiting_for_user --> failed : "POST /api/executions/:id/reject"
-    running --> completed : "Poll detects completed"
-    running --> failed : "Poll detects failed"
-    running --> cancelled : "POST /api/executions/:id/cancel"
-    paused --> cancelled : "POST /api/executions/:id/cancel"
+    [*] --> queued : POST /api/executions (returns exec_id)
+    queued --> running : Worker thread allocated
+    running --> running : Poll updates logs and progress
+    running --> paused : POST /api/executions/{id}/pause
+    paused --> running : POST /api/executions/{id}/resume
+    running --> waiting_for_user : Playwright hits HITL node
+    waiting_for_user --> running : POST /api/executions/{id}/approve
+    waiting_for_user --> failed : POST /api/executions/{id}/reject
+    running --> completed : Poll detects completed
+    running --> failed : Poll detects failed
+    running --> cancelled : POST /api/executions/{id}/cancel
+    paused --> cancelled : POST /api/executions/{id}/cancel
     completed --> [*]
     failed --> [*]
     cancelled --> [*]

@@ -125,7 +125,7 @@ src/
 
 ## Key Design Decisions
 
-1. **No Router** — Three views (`chat`, `history`, `logs`) are managed using React state variables rather than URL routing to keep transition handling lightweight.
+1. **Native HTML5 Routing** — Transitioning between the three views (`/`, `/history`, `/logs`) updates the URL path natively using the HTML5 History API (`window.history.pushState` and `popstate` listeners in [AppContext.jsx](file:///e:/2026/June/CurationPilot_Frontend/src/context/AppContext.jsx)). This preserves the active view when refreshing the page without requiring an external routing framework.
 2. **Single Active Session** — One active chat is handled at a time. The active session holds parameter configurations, log streams, execution status, progress metrics, and transaction validation flags.
 3. **Mock API Layer** — `mockApi.js` mirrors the real backend API interfaces. Real-world parameters and response wrappers match perfectly, allowing a clean swap when the real backend REST endpoints are ready.
 4. **localStorage Persistence** —
