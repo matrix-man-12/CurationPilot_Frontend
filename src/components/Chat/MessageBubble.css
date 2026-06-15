@@ -1,0 +1,220 @@
+.message-bubble {
+  display: flex;
+  gap: var(--space-3);
+  animation: fadeInUp var(--transition-base) ease both;
+}
+
+.message-bubble--user {
+  flex-direction: row-reverse;
+}
+
+.message-bubble--user .msg-content {
+  background: var(--color-primary-soft);
+  border-radius: var(--radius-xl) var(--radius-xl) var(--radius-sm) var(--radius-xl);
+  padding: var(--space-4);
+  max-width: 75%;
+}
+
+.message-bubble--system .msg-content {
+  flex: 1;
+  max-width: 100%;
+}
+
+.msg-avatar {
+  width: 32px;
+  height: 32px;
+  min-width: 32px;
+  border-radius: var(--radius-full);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-top: 2px;
+}
+
+.msg-avatar--system {
+  background: var(--color-primary-soft);
+}
+
+/* Welcome message */
+.msg-welcome {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+}
+
+.msg-welcome-icon {
+  animation: scaleIn var(--transition-slow) ease;
+}
+
+.msg-welcome-text h2 {
+  font-size: var(--text-xl);
+  font-weight: var(--weight-semibold);
+  color: var(--color-text);
+  margin-bottom: var(--space-2);
+  letter-spacing: -0.02em;
+}
+
+.msg-welcome-text p {
+  font-size: var(--text-base);
+  color: var(--color-text-muted);
+  line-height: var(--leading-relaxed);
+}
+
+/* Skill badge */
+.msg-skill-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  padding: var(--space-1) var(--space-3);
+  background: var(--color-primary-soft);
+  border-radius: var(--radius-full);
+  font-size: var(--text-sm);
+  font-weight: var(--weight-medium);
+  color: var(--color-primary-hover);
+  width: fit-content;
+  margin-bottom: var(--space-2);
+}
+
+.skill-badge-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--color-primary);
+}
+
+/* Params prompt */
+.msg-params-prompt {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+
+.msg-params-desc {
+  font-size: var(--text-sm);
+  color: var(--color-text-muted);
+  line-height: var(--leading-relaxed);
+}
+
+.msg-params-instruction {
+  font-size: var(--text-base);
+  color: var(--color-text);
+  font-weight: var(--weight-medium);
+  margin-top: var(--space-2);
+}
+
+/* Params summary (user bubble) */
+.msg-params-summary {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+}
+
+.msg-params-summary-title {
+  font-size: var(--text-sm);
+  font-weight: var(--weight-semibold);
+  color: var(--color-text);
+}
+
+.msg-params-grid {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+
+.msg-param-item {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.msg-param-label {
+  font-size: var(--text-xs);
+  color: var(--color-text-muted);
+  font-weight: var(--weight-medium);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.msg-param-value {
+  font-size: var(--text-sm);
+  color: var(--color-text);
+  font-family: var(--font-mono);
+  word-break: break-all;
+}
+
+/* Result messages */
+.msg-result {
+  background: var(--color-surface-raised);
+  border-radius: var(--radius-lg);
+  padding: var(--space-4) var(--space-5);
+  border: 1px solid var(--color-border);
+  animation: scaleIn var(--transition-base) ease both;
+}
+
+.msg-result--success {
+  border-color: var(--color-success);
+  border-left-width: 3px;
+}
+
+.msg-result--error {
+  border-color: var(--color-error);
+  border-left-width: 3px;
+}
+
+.msg-result-header {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  font-weight: var(--weight-semibold);
+  font-size: var(--text-base);
+  margin-bottom: var(--space-3);
+}
+
+.msg-result-body {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+}
+
+.msg-result-summary {
+  font-size: var(--text-sm);
+  color: var(--color-text);
+  line-height: var(--leading-relaxed);
+}
+
+.msg-result-data {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+  gap: var(--space-3);
+  padding: var(--space-3);
+  background: var(--color-surface);
+  border-radius: var(--radius-md);
+}
+
+.msg-result-datum {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.msg-result-datum-key {
+  font-size: var(--text-xs);
+  color: var(--color-text-muted);
+  text-transform: capitalize;
+}
+
+.msg-result-datum-value {
+  font-size: var(--text-lg);
+  font-weight: var(--weight-semibold);
+  color: var(--color-text);
+  font-family: var(--font-mono);
+}
+
+.msg-result-error-detail {
+  font-size: var(--text-sm);
+  color: var(--color-error);
+  font-family: var(--font-mono);
+  padding: var(--space-3);
+  background: var(--color-error-soft);
+  border-radius: var(--radius-md);
+}

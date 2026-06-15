@@ -1,0 +1,280 @@
+{
+  "categories": [
+    {
+      "id": "cat_data_extraction",
+      "name": "Data Extraction",
+      "skills": [
+        {
+          "id": "skill_001",
+          "name": "Extract Invoice Data",
+          "description": "Navigates to the invoicing portal and extracts line items for a given date range",
+          "category": "Data Extraction",
+          "parameterCount": 4,
+          "lastExecuted": "2026-06-14T10:30:00Z",
+          "executionCount": 47,
+          "estimatedDuration": "2-5 minutes",
+          "parameters": [
+            {
+              "name": "portal_url",
+              "label": "Portal URL",
+              "type": "url",
+              "required": true,
+              "placeholder": "https://invoices.example.com",
+              "helpText": "The full URL of the invoicing portal login page",
+              "defaultValue": null
+            },
+            {
+              "name": "date_range_start",
+              "label": "Start Date",
+              "type": "date",
+              "required": true,
+              "placeholder": "",
+              "helpText": "Beginning of the extraction period",
+              "defaultValue": null
+            },
+            {
+              "name": "date_range_end",
+              "label": "End Date",
+              "type": "date",
+              "required": true,
+              "placeholder": "",
+              "helpText": "End of the extraction period",
+              "defaultValue": null
+            },
+            {
+              "name": "vendor_ids",
+              "label": "Vendor IDs",
+              "type": "comma_separated",
+              "required": false,
+              "placeholder": "V001, V002, V003",
+              "helpText": "Comma-separated list of vendor IDs to filter. Leave empty for all vendors.",
+              "defaultValue": null
+            }
+          ]
+        },
+        {
+          "id": "skill_002",
+          "name": "Scrape Product Prices",
+          "description": "Monitors competitor pricing pages and extracts current product prices into a spreadsheet",
+          "category": "Data Extraction",
+          "parameterCount": 3,
+          "lastExecuted": "2026-06-12T08:15:00Z",
+          "executionCount": 89,
+          "estimatedDuration": "3-7 minutes",
+          "parameters": [
+            {
+              "name": "product_urls",
+              "label": "Product Page URLs",
+              "type": "textarea",
+              "required": true,
+              "placeholder": "https://competitor.com/product-1\nhttps://competitor.com/product-2",
+              "helpText": "One URL per line. Each URL should point to a specific product page.",
+              "defaultValue": null
+            },
+            {
+              "name": "competitor_name",
+              "label": "Competitor Name",
+              "type": "text",
+              "required": true,
+              "placeholder": "Acme Corp",
+              "helpText": "Name of the competitor for labeling in the output",
+              "defaultValue": null
+            },
+            {
+              "name": "output_format",
+              "label": "Output Format",
+              "type": "select",
+              "required": true,
+              "placeholder": "",
+              "helpText": "Format for the exported price data",
+              "defaultValue": "csv",
+              "options": [
+                { "value": "csv", "label": "CSV" },
+                { "value": "json", "label": "JSON" },
+                { "value": "xlsx", "label": "Excel (.xlsx)" }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "cat_data_entry",
+      "name": "Data Entry",
+      "skills": [
+        {
+          "id": "skill_003",
+          "name": "Submit Timesheet",
+          "description": "Fills and submits weekly timesheet entries on the HR portal for a specified employee",
+          "category": "Data Entry",
+          "parameterCount": 4,
+          "lastExecuted": "2026-06-13T16:00:00Z",
+          "executionCount": 120,
+          "estimatedDuration": "1-2 minutes",
+          "parameters": [
+            {
+              "name": "employee_id",
+              "label": "Employee ID",
+              "type": "text",
+              "required": true,
+              "placeholder": "EMP-001",
+              "helpText": "The employee ID from the HR system",
+              "defaultValue": null
+            },
+            {
+              "name": "week_start",
+              "label": "Week Starting",
+              "type": "date",
+              "required": true,
+              "placeholder": "",
+              "helpText": "Monday of the week to submit for",
+              "defaultValue": null
+            },
+            {
+              "name": "hours_data",
+              "label": "Daily Hours (Mon-Fri)",
+              "type": "comma_separated",
+              "required": true,
+              "placeholder": "8, 8, 8, 8, 8",
+              "helpText": "Comma-separated hours for Monday through Friday",
+              "defaultValue": null
+            },
+            {
+              "name": "project_code",
+              "label": "Project Code",
+              "type": "text",
+              "required": true,
+              "placeholder": "PRJ-2026-042",
+              "helpText": "Project code to charge hours against",
+              "defaultValue": null
+            }
+          ]
+        },
+        {
+          "id": "skill_004",
+          "name": "Update CRM Contact",
+          "description": "Updates contact information in the CRM system for a specified contact record",
+          "category": "Data Entry",
+          "parameterCount": 4,
+          "lastExecuted": "2026-06-11T14:20:00Z",
+          "executionCount": 35,
+          "estimatedDuration": "30 seconds - 1 minute",
+          "parameters": [
+            {
+              "name": "contact_id",
+              "label": "Contact ID",
+              "type": "text",
+              "required": true,
+              "placeholder": "CON-12345",
+              "helpText": "The CRM contact record ID",
+              "defaultValue": null
+            },
+            {
+              "name": "contact_email",
+              "label": "New Email Address",
+              "type": "email",
+              "required": false,
+              "placeholder": "updated@example.com",
+              "helpText": "Leave empty to keep the current email",
+              "defaultValue": null
+            },
+            {
+              "name": "contact_phone",
+              "label": "New Phone Number",
+              "type": "text",
+              "required": false,
+              "placeholder": "+1-555-0123",
+              "helpText": "Leave empty to keep the current phone number",
+              "defaultValue": null
+            },
+            {
+              "name": "notes",
+              "label": "Update Notes",
+              "type": "textarea",
+              "required": false,
+              "placeholder": "Reason for update...",
+              "helpText": "Internal notes about why this contact was updated",
+              "defaultValue": null
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "cat_reporting",
+      "name": "Reporting",
+      "skills": [
+        {
+          "id": "skill_005",
+          "name": "Generate Monthly Report",
+          "description": "Compiles data from multiple sources and generates a formatted monthly performance report",
+          "category": "Reporting",
+          "parameterCount": 5,
+          "lastExecuted": "2026-06-01T09:00:00Z",
+          "executionCount": 12,
+          "estimatedDuration": "5-10 minutes",
+          "parameters": [
+            {
+              "name": "report_type",
+              "label": "Report Type",
+              "type": "select",
+              "required": true,
+              "placeholder": "",
+              "helpText": "Type of report to generate",
+              "defaultValue": "performance",
+              "options": [
+                { "value": "performance", "label": "Performance Summary" },
+                { "value": "financial", "label": "Financial Overview" },
+                { "value": "operations", "label": "Operations Metrics" }
+              ]
+            },
+            {
+              "name": "department",
+              "label": "Department",
+              "type": "select",
+              "required": true,
+              "placeholder": "",
+              "helpText": "Department to generate report for",
+              "defaultValue": null,
+              "options": [
+                { "value": "engineering", "label": "Engineering" },
+                { "value": "sales", "label": "Sales" },
+                { "value": "marketing", "label": "Marketing" },
+                { "value": "support", "label": "Customer Support" },
+                { "value": "all", "label": "All Departments" }
+              ]
+            },
+            {
+              "name": "month",
+              "label": "Report Month",
+              "type": "date",
+              "required": true,
+              "placeholder": "",
+              "helpText": "Select any date in the month you want to report on",
+              "defaultValue": null
+            },
+            {
+              "name": "include_charts",
+              "label": "Include Charts",
+              "type": "boolean",
+              "required": false,
+              "placeholder": "",
+              "helpText": "Generate visual charts in the report",
+              "defaultValue": true
+            },
+            {
+              "name": "email_recipients",
+              "label": "Email Recipients",
+              "type": "comma_separated",
+              "required": false,
+              "placeholder": "manager@company.com, director@company.com",
+              "helpText": "Comma-separated email addresses to send the report to",
+              "defaultValue": null
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "totalSkills": 5
+}

@@ -1,0 +1,207 @@
+.skill-selector {
+  background: var(--color-surface-raised);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+  margin-top: var(--space-4);
+  box-shadow: var(--shadow-md);
+  animation: scaleIn var(--transition-base) ease both;
+}
+
+/* Search */
+.skill-search-wrapper {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  padding: var(--space-3) var(--space-4);
+  border-bottom: 1px solid var(--color-border);
+  background: var(--color-surface);
+}
+
+.skill-search-icon {
+  color: var(--color-text-muted);
+  flex-shrink: 0;
+}
+
+.skill-search-input {
+  flex: 1;
+  font-size: var(--text-sm);
+  color: var(--color-text);
+  background: transparent;
+}
+
+.skill-search-input::placeholder {
+  color: var(--color-text-muted);
+}
+
+.skill-search-clear {
+  color: var(--color-text-muted);
+  padding: 2px;
+  border-radius: var(--radius-sm);
+  transition: color var(--transition-fast);
+}
+
+.skill-search-clear:hover {
+  color: var(--color-text);
+}
+
+/* Categories */
+.skill-categories {
+  max-height: 320px;
+  overflow-y: auto;
+}
+
+.skill-category {
+  animation: staggerIn var(--transition-base) ease both;
+}
+
+.skill-category + .skill-category {
+  border-top: 1px solid var(--color-border);
+}
+
+.skill-category-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  padding: var(--space-3) var(--space-4);
+  transition: background var(--transition-fast);
+  text-align: left;
+}
+
+.skill-category-header:hover {
+  background: var(--color-surface);
+}
+
+.skill-category-info {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+}
+
+.skill-category-name {
+  font-size: var(--text-sm);
+  font-weight: var(--weight-semibold);
+  color: var(--color-text);
+}
+
+.skill-category-count {
+  font-size: var(--text-xs);
+  color: var(--color-text-muted);
+  background: var(--color-surface);
+  padding: 1px var(--space-2);
+  border-radius: var(--radius-full);
+}
+
+.skill-category-chevron {
+  color: var(--color-text-muted);
+  transition: transform var(--transition-fast);
+}
+
+.skill-category-header--expanded .skill-category-chevron {
+  transform: rotate(180deg);
+}
+
+/* Skill list */
+.skill-list {
+  padding: 0 var(--space-2) var(--space-2);
+}
+
+.skill-item {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  width: 100%;
+  padding: var(--space-3) var(--space-4);
+  border-radius: var(--radius-md);
+  text-align: left;
+  transition: all var(--transition-fast);
+  animation: staggerIn var(--transition-base) ease both;
+}
+
+.skill-item:hover {
+  background: var(--color-primary-soft);
+}
+
+.skill-item-main {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+.skill-item-name {
+  font-size: var(--text-sm);
+  font-weight: var(--weight-medium);
+  color: var(--color-text);
+}
+
+.skill-item-desc {
+  font-size: var(--text-xs);
+  color: var(--color-text-muted);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.skill-item-meta {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 2px;
+  flex-shrink: 0;
+}
+
+.skill-item-params,
+.skill-item-duration {
+  font-size: var(--text-xs);
+  color: var(--color-text-muted);
+  white-space: nowrap;
+}
+
+.skill-item-arrow {
+  color: var(--color-text-muted);
+  opacity: 0;
+  transform: translateX(-4px);
+  transition: all var(--transition-fast);
+  flex-shrink: 0;
+}
+
+.skill-item:hover .skill-item-arrow {
+  opacity: 1;
+  transform: translateX(0);
+}
+
+/* Loading */
+.skill-loading {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-2);
+  padding: var(--space-6);
+}
+
+.skill-loading-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--color-primary);
+  animation: pulse 1.2s ease-in-out infinite;
+}
+
+.skill-loading-dot:nth-child(2) {
+  animation-delay: 0.2s;
+}
+
+.skill-loading-dot:nth-child(3) {
+  animation-delay: 0.4s;
+}
+
+/* Empty state */
+.skill-empty {
+  padding: var(--space-6);
+  text-align: center;
+  color: var(--color-text-muted);
+  font-size: var(--text-sm);
+}
