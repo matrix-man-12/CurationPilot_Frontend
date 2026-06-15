@@ -1,10 +1,11 @@
 import { useRef, useEffect } from 'react';
-import { useAppState } from '../../context/AppContext';
+import { useAppState, useAppDispatch } from '../../context/AppContext';
 import MessageBubble from './MessageBubble';
 import './ChatContainer.css';
 
 export default function ChatContainer() {
   const { activeSession } = useAppState();
+  const dispatch = useAppDispatch();
   const messagesEndRef = useRef(null);
 
   useEffect(() => {
@@ -34,6 +35,28 @@ export default function ChatContainer() {
               sessionStatus={activeSession.status}
             />
           ))}
+
+          {isReadOnly && (
+            <div className="chat-session-ended">
+              <div className="chat-ended-divider">
+                <span className="chat-ended-line" />
+                <span className="chat-ended-text">Session Ended</span>
+                <span className="chat-ended-line" />
+              </div>
+              <button
+                className="chat-ended-new-btn"
+                onClick={() => dispatch({ type: 'START_NEW_SESSION' })}
+                id="btn-ended-new-chat"
+              >
+                <svg width="14" height="14" viewBox="0 0 16 16" fill="none" aria-hidden="true">
+                  <line x1="8" y1="3" x2="8" y2="13" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
+                  <line x1="3" y1="8" x2="13" y2="8" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
+                </svg>
+                Start New Automation
+              </button>
+            </div>
+          )}
+
           <div ref={messagesEndRef} />
         </div>
       </div>

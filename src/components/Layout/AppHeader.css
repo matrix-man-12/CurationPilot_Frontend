@@ -60,11 +60,10 @@
 }
 
 .nav-btn--active {
-  color: var(--color-primary-hover);
+  color: var(--color-text);
   background: var(--color-surface-raised);
-  box-shadow: var(--shadow-md);
+  box-shadow: var(--shadow-sm);
   font-weight: var(--weight-semibold);
-  border-bottom: 2px solid var(--color-primary);
 }
 
 .header-right {
