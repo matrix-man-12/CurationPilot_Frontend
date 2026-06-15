@@ -125,8 +125,11 @@ src/
 
 ## Key Design Decisions
 
-1. **No router** — two views (Chat/History) managed by state, not URL routes
-2. **Single active session** — one chat at a time, simplified state
-3. **Mock API layer** — `mockApi.js` mirrors real API interface, swap when backend ready
-4. **localStorage persistence** — sessions survive page refresh
-5. **CSS Custom Properties** — design tokens in `variables.css`, no CSS framework
+1. **No Router** — Three views (`chat`, `history`, `logs`) are managed using React state variables rather than URL routing to keep transition handling lightweight.
+2. **Single Active Session** — One active chat is handled at a time. The active session holds parameter configurations, log streams, execution status, progress metrics, and transaction validation flags.
+3. **Mock API Layer** — `mockApi.js` mirrors the real backend API interfaces. Real-world parameters and response wrappers match perfectly, allowing a clean swap when the real backend REST endpoints are ready.
+4. **localStorage Persistence** —
+   - **Session Store**: All past and active chat sessions (including in-chat execution logs inside message `meta` properties) are saved to `localStorage`, surviving page refreshes and view switches.
+   - **Live Logs Store**: Console operations logged in the `Logs` tab are buffered in `localStorage` to avoid clearing them when transitioning views.
+   - **Execution Tracker**: The active execution store maps IDs to current operational states in `localStorage`, allowing the client component to automatically resume short-polling when mounting.
+5. **CSS Custom Properties** — Custom design tokens are organized in `variables.css`, facilitating a highly custom, responsive warm-pastel visual system without depending on external CSS frameworks.

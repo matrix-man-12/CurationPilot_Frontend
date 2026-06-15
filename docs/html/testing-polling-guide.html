@@ -1,0 +1,336 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Short-Polling API Testing Guide — CurationPilot Docs</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css">
+  <!-- Load Mermaid via CDN -->
+  <script src="https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.min.js"></script>
+  <script>
+    mermaid.initialize({
+      startOnLoad: true,
+      theme: 'neutral',
+      securityLevel: 'loose',
+      themeVariables: {
+        fontFamily: 'Inter, sans-serif',
+        fontSize: '13px',
+        lineColor: '#8C7E73',
+        primaryColor: '#FEF0E7',
+        primaryTextColor: '#3D3229',
+        secondaryColor: '#F0F7F4'
+      }
+    });
+  </script>
+</head>
+<body>
+  <div class="layout-container">
+    <!-- Sidebar Navigation -->
+    <aside class="sidebar">
+      <div class="sidebar-brand">
+        <span class="brand-logo">🎛️</span>
+        <span class="brand-name">CurationPilot</span>
+      </div>
+      <div class="sidebar-version">v1.1.0 · Docs</div>
+      <nav class="sidebar-nav">
+        <a href="project-overview.html" class="nav-item" id="nav-project-overview">Overview</a>
+        <a href="architecture.html" class="nav-item" id="nav-architecture">Architecture</a>
+        <a href="design-system.html" class="nav-item" id="nav-design-system">Design System</a>
+        <a href="api-specification.html" class="nav-item" id="nav-api-specification">REST API Spec</a>
+        <a href="testing-polling-guide.html" class="nav-item active" id="nav-testing-polling-guide">Polling Testing Guide</a>
+        <a href="websocket-specification.html" class="nav-item" id="nav-websocket-specification">WebSocket Spec</a>
+      </nav>
+    </aside>
+
+    <!-- Main Content Panel -->
+    <main class="main-content">
+      <article class="content-article">
+        <h1>Short-Polling API Testing Guide</h1>
+        
+        <div class="meta-block">
+          <div class="meta-item">
+            <span class="meta-label">Status:</span>
+            <span>Approved for Implementation</span>
+          </div>
+          <div class="meta-item">
+            <span class="meta-label">Method:</span>
+            <span>REST Polling (Fallback)</span>
+          </div>
+        </div>
+
+        <section>
+          <h2>Overview</h2>
+          <p>Until the backend incorporates low-latency real-time WebSockets, the frontend tracks browser executions using <strong>REST Short-Polling</strong>. The dashboard triggers repeating HTTP <code>GET</code> operations on the execution record to pull step-by-step progress and operational logs.</p>
+          <p>This document guides backend developers on how to mock, test, and validate their endpoint state machinery against the frontend client's expected polling behavior.</p>
+        </section>
+
+        <section>
+          <h2>1. Frontend Polling Lifecycle</h2>
+          <p>The client uses React hooks to poll the <code>GET /api/executions/:id</code> endpoint at a fixed interval of <strong>1.5 seconds (1500ms)</strong>.</p>
+          
+          <table>
+            <thead>
+              <tr>
+                <th>Status Received</th>
+                <th>Polling Loop Behavior</th>
+                <th>Frontend UI State Rendering</th>
+                <th>Next Action Trigger</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td><code>queued</code></td>
+                <td><strong>Active</strong> (Checks every 1.5s)</td>
+                <td>Shows a waiting loader; awaiting backend initialization.</td>
+                <td>Transitions to <code>running</code> automatically.</td>
+              </tr>
+              <tr>
+                <td><code>running</code></td>
+                <td><strong>Active</strong> (Checks every 1.5s)</td>
+                <td>Renders progress bar fill, updates active step description, scrolls log stream.</td>
+                <td>Transitions to <code>completed</code>, <code>paused</code>, <code>waiting_for_user</code>, or <code>failed</code>.</td>
+              </tr>
+              <tr>
+                <td><code>paused</code></td>
+                <td><strong>Suspended (Halted)</strong></td>
+                <td>Freezes progress indicators, shows warning state, alters toolbar to "Resume" button.</td>
+                <td>User clicks **Resume** ➔ Sends <code>POST .../resume</code>, updates state, restarts polling loop.</td>
+              </tr>
+              <tr>
+                <td><code>waiting_for_user</code></td>
+                <td><strong>Suspended (Halted)</strong></td>
+                <td>Halts progress indicators, displays Human-in-the-loop Approve/Reject confirmation card.</td>
+                <td>User clicks **Approve** (sends <code>POST .../approve</code>) or **Reject** (sends <code>POST .../reject</code>).</td>
+              </tr>
+              <tr>
+                <td><code>completed</code></td>
+                <td><strong>Terminated (Halted)</strong></td>
+                <td>Shows terminal success state, output summary details, and duration indicators.</td>
+                <td>None (Terminal state).</td>
+              </tr>
+              <tr>
+                <td><code>failed</code></td>
+                <td><strong>Terminated (Halted)</strong></td>
+                <td>Shows failure red card containing the terminal error message.</td>
+                <td>None (Terminal state).</td>
+              </tr>
+              <tr>
+                <td><code>cancelled</code></td>
+                <td><strong>Terminated (Halted)</strong></td>
+                <td>Shows cancellation indicator badge.</td>
+                <td>None (Terminal state).</td>
+              </tr>
+            </tbody>
+          </table>
+
+          <div class="alert alert-important">
+            <div class="alert-title">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12.01" y2="8"/><path d="M12 12v4"/></svg>
+              Why Polling Stops During Pause/HITL
+            </div>
+            <p style="margin: 0;">Suspending the short-poll interval prevents the frontend from sending unnecessary HTTP requests to the backend while the automation runner is suspended. Polling resumes when the user clicks an action button, as the action's response returns the updated state payload.</p>
+          </div>
+        </section>
+
+        <section>
+          <h2>2. Polling State Transitions Diagram</h2>
+          <p>This flow chart maps how the client's polling loop starts, halts, and terminates depending on the execution status returned:</p>
+          
+          <!-- Live Mermaid Rendering -->
+          <div class="mermaid">
+            stateDiagram-v2
+                [*] --> Submitted: POST /api/executions
+                Submitted --> Queued: Returns exec_id
+                
+                state PollingLoop {
+                    Queued --> Running: Poll detects "running"
+                    Running --> Running: Poll updates logs/progress
+                    
+                    Running --> Paused: POST .../pause
+                    note right of Paused
+                        Frontend stops polling.
+                        Awaiting manual resume.
+                    end note
+                    
+                    Paused --> Running: POST .../resume
+                    note right of Running
+                        Frontend restarts polling.
+                    end note
+                    
+                    Running --> WaitingForUser: Playwright reaches HITL check
+                    note right of WaitingForUser
+                        Frontend stops polling.
+                        Awaiting manual Approve/Reject.
+                    end note
+                    
+                    WaitingForUser --> Running: POST .../approve (Resumes)
+                    WaitingForUser --> Failed: POST .../reject (Rejects)
+                }
+
+                Running --> Completed: Poll detects "completed"
+                Running --> Failed: Poll detects "failed"
+                Running --> Cancelled: POST .../cancel
+                Paused --> Cancelled: POST .../cancel
+                
+                Completed --> [*]
+                Failed --> [*]
+                Cancelled --> [*]
+          </div>
+        </section>
+
+        <section>
+          <h2>3. Testing Backend Endpoints with cURL</h2>
+          <p>Verify that your endpoints match the exact expected state properties using these standard command-line requests:</p>
+          
+          <h4>A. Trigger a New Skill Run</h4>
+          <pre><code>curl -X POST http://localhost:8080/api/executions \
+  -H "Content-Type: application/json" \
+  -d '{"skillId": "skill_001", "parameters": {"portal_url": "https://example.com", "date_range_start": "2026-06-01", "date_range_end": "2026-06-15", "vendor_ids": ["V01", "V02"]}}'</code></pre>
+
+          <h4>B. Query Polling Status (Repeat during execution)</h4>
+          <pre><code>curl -X GET http://localhost:8080/api/executions/exec_abc123</code></pre>
+
+          <h4>C. Force Pause Operations</h4>
+          <pre><code>curl -X POST http://localhost:8080/api/executions/exec_abc123/pause</code></pre>
+
+          <h4>D. Resume Halted Automation</h4>
+          <pre><code>curl -X POST http://localhost:8080/api/executions/exec_abc123/resume</code></pre>
+
+          <h4>E. Approve Pending Human-in-the-Loop Dialog</h4>
+          <pre><code>curl -X POST http://localhost:8080/api/executions/exec_abc123/approve</code></pre>
+
+          <h4>F. Reject/Abort execution</h4>
+          <pre><code>curl -X POST http://localhost:8080/api/executions/exec_abc123/reject</code></pre>
+        </section>
+
+        <section>
+          <h2>4. Runnable Node.js Simulation Harness</h2>
+          <p>You can run this client script locally using Node.js to verify your backend's implementation of the API contract. Save as <code>test-polling-harness.js</code> and run <code>node test-polling-harness.js</code>:</p>
+          
+          <pre><code>/**
+ * CurationPilot — Polling & Action Test Harness
+ * Simulates a frontend client running against your backend API.
+ */
+
+const BASE_URL = 'http://localhost:8080/api';
+const POLL_INTERVAL = 1500; // 1.5s
+let activePollTimer = null;
+let executionId = null;
+
+async function callApi(path, options = {}) {
+  const url = `${BASE_URL}${path}`;
+  const response = await fetch(url, {
+    headers: { 'Content-Type': 'application/json', ...options.headers },
+    ...options
+  });
+  if (!response.ok) {
+    const text = await response.text();
+    throw new Error(`HTTP ${response.status}: ${text}`);
+  }
+  return response.json();
+}
+
+async function startSimulation() {
+  console.log('🚀 Starting Client Execution Simulation...');
+  
+  try {
+    const submitPayload = {
+      skillId: 'skill_001',
+      parameters: {
+        portal_url: 'https://invoices.acme.com',
+        date_range_start: '2026-06-01',
+        date_range_end: '2026-06-15',
+        vendor_ids: ['V001', 'V002']
+      }
+    };
+    
+    console.log('\n[1/5] Submitting execution request...');
+    const result = await callApi('/executions', {
+      method: 'POST',
+      body: JSON.stringify(submitPayload)
+    });
+    
+    executionId = result.data.executionId;
+    console.log(`✅ Submission successful. Execution ID: "${executionId}"`);
+    
+    // Start Polling Loop
+    runPollLoop();
+    
+    // Simulating user pausing after 3.5 seconds
+    setTimeout(async () => {
+      console.log(`\n[3/5] Simulating user click on [Pause]...`);
+      const pauseResult = await callApi(`/executions/${executionId}/pause`, { method: 'POST' });
+      if (pauseResult.success) {
+        console.log(`⏸️ Pause acknowledged. Status returned: "${pauseResult.data.status}"`);
+      }
+      
+      // Simulating user resuming 3 seconds later
+      setTimeout(async () => {
+        console.log(`\n[4/5] Simulating user click on [Resume]...`);
+        const resumeResult = await callApi(`/executions/${executionId}/resume`, { method: 'POST' });
+        if (resumeResult.success) {
+          console.log(`▶️ Resume acknowledged. Status returned: "${resumeResult.data.status}"`);
+          runPollLoop(); // Resume client-side polling loop
+        }
+      }, 3000);
+      
+    }, 3500);
+
+  } catch (err) {
+    console.error('❌ Simulation aborted:', err.message);
+  }
+}
+
+function runPollLoop() {
+  if (activePollTimer) clearTimeout(activePollTimer);
+  
+  activePollTimer = setTimeout(async () => {
+    try {
+      const response = await callApi(`/executions/${executionId}`);
+      const { status, progress, logs } = response.data;
+      
+      console.log(`[POLL TICK] Status: "${status}" | Progress: ${progress?.percentage}% | Logs: ${logs?.length || 0}`);
+      
+      if (status === 'completed' || status === 'failed' || status === 'cancelled') {
+        console.log(`\n🏁 Terminal status reached: "${status}". Halted polling.`);
+        return;
+      }
+      
+      if (status === 'paused') {
+        console.log('⏸️ Poll loop suspended while execution is paused.');
+        return;
+      }
+      
+      if (status === 'waiting_for_user') {
+        console.log('\n⚠️ Server waiting for HITL approval. Poll loop suspended.');
+        
+        // Approve after 2 seconds
+        setTimeout(async () => {
+          console.log('\n[HITL ACTION] Simulating user Approve click...');
+          const approveResult = await callApi(`/executions/${executionId}/approve`, { method: 'POST' });
+          if (approveResult.success) {
+            console.log(`✅ Approved. Status returned: "${approveResult.data.status}"`);
+            runPollLoop(); // Resume polling
+          }
+        }, 2000);
+        return;
+      }
+      
+      runPollLoop();
+    } catch (err) {
+      console.error('❌ Poll error:', err.message);
+      runPollLoop();
+    }
+  }, POLL_INTERVAL);
+}
+
+startSimulation();</code></pre>
+        </section>
+      </article>
+    </main>
+  </div>
+</body>
+</html>

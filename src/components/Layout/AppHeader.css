@@ -52,6 +52,8 @@
   color: var(--color-text-muted);
   transition: all var(--transition-fast);
   white-space: nowrap;
+  cursor: pointer;
+  text-decoration: none;
 }
 
 .nav-btn:hover {

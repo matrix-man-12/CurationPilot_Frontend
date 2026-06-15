@@ -1,0 +1,177 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Architecture — CurationPilot Docs</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <div class="layout-container">
+    <!-- Sidebar Navigation -->
+    <aside class="sidebar">
+      <div class="sidebar-brand">
+        <span class="brand-logo">🎛️</span>
+        <span class="brand-name">CurationPilot</span>
+      </div>
+      <div class="sidebar-version">v1.1.0 · Docs</div>
+      <nav class="sidebar-nav">
+        <a href="project-overview.html" class="nav-item" id="nav-project-overview">Overview</a>
+        <a href="architecture.html" class="nav-item active" id="nav-architecture">Architecture</a>
+        <a href="design-system.html" class="nav-item" id="nav-design-system">Design System</a>
+        <a href="api-specification.html" class="nav-item" id="nav-api-specification">REST API Spec</a>
+        <a href="testing-polling-guide.html" class="nav-item" id="nav-testing-polling-guide">Polling Testing Guide</a>
+        <a href="websocket-specification.html" class="nav-item" id="nav-websocket-specification">WebSocket Spec</a>
+      </nav>
+    </aside>
+
+    <!-- Main Content Panel -->
+    <main class="main-content">
+      <article class="content-article">
+        <h1>Frontend Architecture</h1>
+        
+        <div class="meta-block">
+          <div class="meta-item">
+            <span class="meta-label">Status:</span>
+            <span class="alert-title"><span class="badge-post" style="padding: 0.1rem 0.4rem; font-size: 0.75rem;">Completed</span></span>
+          </div>
+          <div class="meta-item">
+            <span class="meta-label">Updated:</span>
+            <span>June 15, 2026</span>
+          </div>
+        </div>
+
+        <section>
+          <h2>Component Tree</h2>
+          <p>The CurationPilot frontend is structured as a component-driven React application. Below is the primary visual layout hierachy:</p>
+          
+          <pre><code><strong>App</strong> (Root Layout, View Toggler)
+├── <strong>AppHeader</strong>
+│   ├── Logo + Brand Title
+│   └── Navigation Tabs (Chat / History / Logs views)
+│
+├── <strong>ChatView</strong> (Active workspace)
+│   └── <strong>ChatContainer</strong>
+│       ├── <strong>MessageList</strong> (Timeline container)
+│       │   ├── System Message: <strong>SkillSelector</strong> (Nested, expandable category list)
+│       │   ├── System Message: <strong>ParameterForm</strong> (Form inputs + CSV Dropzone tab panels)
+│       │   │   ├── Manual Form Inputs (Rendered by type)
+│       │   │   └── CSV preview table
+│       │   ├── User Message: Grid summary cards for parameters submitted
+│       │   └── System Message: <strong>ExecutionStatus</strong> (Progress bar, action toolbar, logs, HITL dialog)
+│       └── (Note: All user configuration and triggers are contextual bubble items)
+│
+├── <strong>HistoryView</strong> (Past logs and execution lookup)
+│   ├── History Search Bar
+│   └── <strong>SessionCardList</strong> (Checkbox selection for bulk deletion, clicks reload session)
+│
+└── <strong>LogsView</strong> (Streaming live console log tracker)
+    ├── Log control toolbar (filter dropdowns, clear logs, pause/resume browser feeds)
+    └── Monospace logs terminal block</code></pre>
+        </section>
+
+        <section>
+          <h2>State Management Architecture</h2>
+          <p>Global app state is stored centrally in a React Context (<code>AppContext</code>) with local storage bindings:</p>
+          
+          <pre><code><strong>AppContext</strong> (State Provider)
+│
+├── <strong>currentView</strong>: "chat" | "history" | "logs"
+├── <strong>activeSession</strong>: {
+│     id: String,
+│     skillId: String,
+│     skillName: String,
+│     status: "idle" | "configuring" | "executing" | "completed" | "failed",
+│     parameters: Object,
+│     executionId: String,
+│     messages: Array [
+│       { id, sender: "user"|"system", type: "text"|"form"|"execution"..., text, meta: { logs, result } }
+│     ]
+│   }
+├── <strong>sessions</strong>: Array (Historical session configurations list)
+│
+└── <strong>Dispatch Actions</strong>:
+    ├── <code>SET_VIEW</code>: Switch active panels
+    ├── <code>START_NEW_SESSION</code>: Clear active and select a new skill
+    ├── <code>SELECT_SKILL</code>: Mount skill parameters schema
+    ├── <code>SUBMIT_PARAMETERS</code>: Store input payload, transition to executing status
+    ├── <code>SET_EXECUTION_ID</code>: Bind Playwright execution runner session ID
+    ├── <code>UPDATE_LOGS</code>: Stream active logs array to active message meta
+    ├── <code>UPDATE_EXECUTION</code>: Update progress metrics and status strings
+    ├── <code>COMPLETE_EXECUTION</code>: Populate final duration and report summary
+    ├── <code>FAIL_EXECUTION</code>: Bind error description and halt updates
+    └── <code>LOAD_SESSION</code>: Pull past session from history array and replace active context</code></pre>
+        </section>
+
+        <section>
+          <h2>Data Flow</h2>
+          <p>Interaction data flows in a unidirectional pattern:</p>
+          
+          <table>
+            <thead>
+              <tr>
+                <th>User Interaction</th>
+                <th>Triggered Dispatch Action</th>
+                <th>State Updates</th>
+                <th>UI Re-render Event</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>Select Skill in Dropdown</td>
+                <td><code>SELECT_SKILL</code></td>
+                <td>Binds <code>skillId</code> and parameters template schema.</td>
+                <td>Mounts dynamic <code>ParameterForm</code>.</td>
+              </tr>
+              <tr>
+                <td>Click "Run Skill" button</td>
+                <td><code>SUBMIT_PARAMETERS</code></td>
+                <td>Injects parameter object, App state ➔ "executing".</td>
+                <td>Adds user parameter receipt bubble and starts <code>ExecutionStatus</code>.</td>
+              </tr>
+              <tr>
+                <td>HTTP Polling ticks (1.5s)</td>
+                <td><code>UPDATE_EXECUTION</code>, <code>UPDATE_LOGS</code></td>
+                <td>Updates active session logs arrays and step percentages.</td>
+                <td>Scrolls logs into view, updates progress bar indicators.</td>
+              </tr>
+              <tr>
+                <td>User clicks Pause/Cancel</td>
+                <td>Sends API request, updates local state on success.</td>
+                <td>Transitions status to <code>paused</code> or <code>failed</code>.</td>
+                <td>Freezes progress indicators, displays control states.</td>
+              </tr>
+              <tr>
+                <td>Select Session card in History</td>
+                <td><code>LOAD_SESSION</code></td>
+                <td>Pulls the corresponding record matching session ID.</td>
+                <td>Restores chat timeline, inputs, logs, and statuses exactly as they were left.</td>
+              </tr>
+            </tbody>
+          </table>
+        </section>
+
+        <section>
+          <h2>Key Design Decisions</h2>
+          <ol>
+            <li><strong>No Router</strong>: The three views (<code>chat</code>, <code>history</code>, <code>logs</code>) are managed using React state variables rather than URL routing to keep transition handling lightweight.</li>
+            <li><strong>Single Active Session</strong>: One active chat is handled at a time. The active session holds parameter configurations, log streams, execution status, progress metrics, and transaction validation flags.</li>
+            <li><strong>Mock API Layer</strong>: <code>mockApi.js</code> mirrors the real backend API interfaces. Real-world parameters and response wrappers match perfectly, allowing a clean swap when the real backend REST endpoints are ready.</li>
+            <li><strong>localStorage Persistence</strong>:
+              <ul>
+                <li><strong>Session Store</strong>: All past and active chat sessions (including in-chat execution logs inside message <code>meta</code> properties) are saved to <code>localStorage</code>, surviving page refreshes and view switches.</li>
+                <li><strong>Live Logs Store</strong>: Console operations logged in the <code>Logs</code> tab are buffered in <code>localStorage</code> to avoid clearing them when transitioning views.</li>
+                <li><strong>Execution Tracker</strong>: The active execution store maps IDs to current operational states in <code>localStorage</code>, allowing the client component to automatically resume short-polling when mounting.</li>
+              </ul>
+            </li>
+            <li><strong>CSS Custom Properties</strong>: Custom design tokens are organized in <code>variables.css</code>, facilitating a highly custom, responsive warm-pastel visual system without depending on external CSS frameworks.</li>
+          </ol>
+        </section>
+      </article>
+    </main>
+  </div>
+</body>
+</html>

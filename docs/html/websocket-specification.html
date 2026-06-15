@@ -1,0 +1,235 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>WebSocket Specification — CurationPilot Docs</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <div class="layout-container">
+    <!-- Sidebar Navigation -->
+    <aside class="sidebar">
+      <div class="sidebar-brand">
+        <span class="brand-logo">🎛️</span>
+        <span class="brand-name">CurationPilot</span>
+      </div>
+      <div class="sidebar-version">v1.1.0 · Docs</div>
+      <nav class="sidebar-nav">
+        <a href="project-overview.html" class="nav-item" id="nav-project-overview">Overview</a>
+        <a href="architecture.html" class="nav-item" id="nav-architecture">Architecture</a>
+        <a href="design-system.html" class="nav-item" id="nav-design-system">Design System</a>
+        <a href="api-specification.html" class="nav-item" id="nav-api-specification">REST API Spec</a>
+        <a href="testing-polling-guide.html" class="nav-item" id="nav-testing-polling-guide">Polling Testing Guide</a>
+        <a href="websocket-specification.html" class="nav-item active" id="nav-websocket-specification">WebSocket Spec</a>
+      </nav>
+    </aside>
+
+    <!-- Main Content Panel -->
+    <main class="main-content">
+      <article class="content-article">
+        <h1>WebSocket & Webhook Specification</h1>
+        
+        <div class="meta-block">
+          <div class="meta-item">
+            <span class="meta-label">Status:</span>
+            <span class="alert-title"><span class="badge-get" style="padding: 0.1rem 0.4rem; font-size: 0.75rem;">Draft</span></span>
+          </div>
+          <div class="meta-item">
+            <span class="meta-label">Version:</span>
+            <span>1.0.0</span>
+          </div>
+        </div>
+
+        <section>
+          <h2>Overview</h2>
+          <p>Once the backend incorporates real-time communications support, the frontend will adopt <strong>WebSockets</strong> to stream execution events and Playwright action logs directly, deprecating short-polling. Outbound integrations will be handled via backend <strong>Webhooks</strong> to notify external user endpoints upon completion or failure.</p>
+        </section>
+
+        <section>
+          <h2>WebSocket Connection</h2>
+          
+          <h3>Connection Endpoint</h3>
+          <p><strong>Development</strong>:</p>
+          <pre><code>ws://localhost:8080/ws/executions/:executionId</code></pre>
+          <p><strong>Production</strong>:</p>
+          <pre><code>wss://api.curationpilot.com/ws/executions/:executionId</code></pre>
+
+          <h3>Handshake Authentication (Future)</h3>
+          <p>When user verification is implemented, authentication parameters will be attached directly to the connection query string during handshake:</p>
+          <pre><code>ws://host/ws/executions/:executionId?token=&lt;jwt_token&gt;</code></pre>
+
+          <h3>Connection Lifecycle</h3>
+          <ol>
+            <li>Frontend triggers <code>POST /api/executions</code> and receives the tracking <code>executionId</code>.</li>
+            <li>Frontend establishes a WebSocket connection targeting <code>/ws/executions/:executionId</code>.</li>
+            <li>Backend accepts connection and starts streaming script log and progress events.</li>
+            <li>WebSocket connection terminates automatically when execution lands in a terminal state (<code>completed</code>, <code>failed</code>, or <code>cancelled</code>).</li>
+          </ol>
+        </section>
+
+        <div class="divider"></div>
+
+        <section>
+          <h2>Server ➔ Client Event Envelopes</h2>
+          <p>All structured events streamed from the server follow this uniform structure:</p>
+          <pre><code>{
+  "event": "execution.step",
+  "timestamp": "2026-06-15T10:30:05Z",
+  "data": { ... }
+}</code></pre>
+
+          <h3 style="margin-top: 1.5rem;">Event Types</h3>
+
+          <h4>1. <code>execution.started</code></h4>
+          <p>Sent as soon as Playwright executes the script file.</p>
+          <pre><code>{
+  "event": "execution.started",
+  "timestamp": "2026-06-15T10:30:02Z",
+  "data": {
+    "executionId": "exec_abc123",
+    "totalSteps": 8
+  }
+}</code></pre>
+
+          <h4>2. <code>execution.step</code></h4>
+          <p>Sent whenever a Playwright step completes successfully.</p>
+          <pre><code>{
+  "event": "execution.step",
+  "timestamp": "2026-06-15T10:30:05Z",
+  "data": {
+    "executionId": "exec_abc123",
+    "step": 3,
+    "totalSteps": 8,
+    "stepName": "Navigating to invoice list",
+    "percentage": 37,
+    "screenshotUrl": "/screenshots/exec_abc123_step3.png"
+  }
+}</code></pre>
+
+          <h4>3. <code>execution.log</code></h4>
+          <p>Real-time stdout log line emitted by the automated script runner.</p>
+          <pre><code>{
+  "event": "execution.log",
+  "timestamp": "2026-06-15T10:30:05Z",
+  "data": {
+    "executionId": "exec_abc123",
+    "level": "info",
+    "message": "Login successful, navigating to invoice page"
+  }
+}</code></pre>
+          <p>Supported log levels: <code>"debug"</code>, <code>"info"</code>, <code>"warn"</code>, <code>"error"</code>.</p>
+
+          <h4>4. <code>execution.completed</code></h4>
+          <p>Sent upon complete run success. Terminates connection.</p>
+          <pre><code>{
+  "event": "execution.completed",
+  "timestamp": "2026-06-15T10:32:15Z",
+  "data": {
+    "executionId": "exec_abc123",
+    "duration": "2m 13s",
+    "result": {
+      "summary": "Successfully extracted 24 invoice line items",
+      "outputUrl": "/downloads/exec_abc123_output.csv",
+      "data": {
+        "invoicesFound": 24,
+        "vendorsProcessed": 3,
+        "totalAmount": 45230.50
+      }
+    }
+  }
+}</code></pre>
+
+          <h4>5. <code>execution.failed</code></h4>
+          <p>Sent when the runner fails or is rejected. Terminates connection.</p>
+          <pre><code>{
+  "event": "execution.failed",
+  "timestamp": "2026-06-15T10:31:45Z",
+  "data": {
+    "executionId": "exec_abc123",
+    "error": {
+      "code": "NAVIGATION_TIMEOUT",
+      "message": "Timed out waiting for invoice list page to load",
+      "step": 3,
+      "screenshotUrl": "/screenshots/exec_abc123_error.png"
+    }
+  }
+}</code></pre>
+
+          <h4>6. <code>execution.cancelled</code></h4>
+          <p>Sent when cancellation is confirmed by the backend thread. Terminates connection.</p>
+          <pre><code>{
+  "event": "execution.cancelled",
+  "timestamp": "2026-06-15T10:31:00Z",
+  "data": {
+    "executionId": "exec_abc123",
+    "cancelledAt": "2026-06-15T10:31:00Z"
+  }
+}</code></pre>
+        </section>
+
+        <section>
+          <h2>Client ➔ Server Event Envelopes</h2>
+          
+          <h3>1. <code>execution.cancel</code></h3>
+          <p>Allows the client to request immediate execution abortion over the WebSocket pipe.</p>
+          <pre><code>{
+  "event": "execution.cancel",
+  "data": {
+    "executionId": "exec_abc123"
+  }
+}</code></pre>
+        </section>
+
+        <section>
+          <h2>Reconnection Strategy</h2>
+          <p>Should the WebSocket channel drop unexpectedly during execution, the client executes an exponential backoff reconnect attempt:</p>
+          <ol>
+            <li>The frontend detects connection close state via <code>ws.onclose</code>.</li>
+            <li>Wait 1 second, then invoke a reconnection handshake.</li>
+            <li>On success, verify state by querying <code>GET /api/executions/:executionId</code>, pulling down any logs that were generated while disconnected.</li>
+            <li>Resume standard event listening.</li>
+            <li>If unsuccessful, double the retry delay: 1s ➔ 2s ➔ 4s ➔ 8s ➔ max 30s.</li>
+            <li>After 10 failed reconnection attempts, fall back to the REST short-polling loop automatically.</li>
+          </ol>
+        </section>
+
+        <section>
+          <h2>Webhooks (Outbound Notifications)</h2>
+          <p>Allows external applications (third-party tools, databases) to listen to completed automation notifications.</p>
+          
+          <h3>Configuration Payload</h3>
+          <pre><code>{
+  "webhookUrl": "https://your-system.com/webhooks/curationpilot",
+  "events": ["execution.completed", "execution.failed"],
+  "secret": "whsec_..."
+}</code></pre>
+
+          <h3>Webhook Request Body</h3>
+          <pre><code>{
+  "event": "execution.completed",
+  "timestamp": "2026-06-15T10:32:15Z",
+  "data": {
+    "executionId": "exec_abc123",
+    "skillId": "skill_001",
+    "skillName": "Extract Invoice Data",
+    "status": "completed",
+    "duration": "2m 13s",
+    "result": {
+      "summary": "Successfully extracted 24 invoice line items"
+    }
+  },
+  "signature": "sha256=..."
+}</code></pre>
+
+          <h3>Signature Verification</h3>
+          <p>The backend signs webhook payloads using HMAC-SHA256 with a pre-shared secret. Receiving endpoints should verify the <code>signature</code> key/header to guarantee that the request payload originated from CurationPilot.</p>
+        </section>
+      </article>
+    </main>
+  </div>
+</body>
+</html>

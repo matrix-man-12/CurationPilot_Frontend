@@ -52,7 +52,12 @@ The frontend is the user-facing interface. It:
 
 ## Current Status
 
-- **Frontend**: In active development (chat interface, skill selection, parameter forms)
-- **Backend**: Not yet started — using mock APIs for frontend development
-- **API Contract**: Defined (see [api-specification.md](./api-specification.md))
-- **WebSocket Contract**: Defined (see [websocket-specification.md](./websocket-specification.md))
+- **Frontend**: Current stage is highly functional. Core modules include:
+  - **Chat Interface**: Interactive chat timeline incorporating System prompt bubbles, searchable and categorized skill selectors, parameter input forms, and live execution updates.
+  - **Bulk Execution (CSV)**: Built-in drag-and-drop CSV loader, client-side JS CSV parser with schema validation, expected headers indicators, and scrollable data tables for loaded sets.
+  - **Controls Panel**: Live toolbar providing Pause, Resume, and Cancel execution requests.
+  - **Human-in-the-loop (HITL)**: Contextual decision prompts blocking Playwright execution until explicit user Approve/Reject confirmation is submitted.
+  - **Logs Stream**: Live console log viewport streaming real-time operational messages (persistent in-chat logs and historical logs surviving page reloads).
+  - **History View**: Searchable list of past sessions, loading full chat recovery from local storage.
+- **Backend**: Not yet started — the API specifications are finalized for REST endpoints (see [api-specification.md](./api-specification.md)), with WebSockets drafted for a subsequent phase (see [websocket-specification.md](./websocket-specification.md)).
+- **Integration Layer**: Swappable API interface module (`src/services/api.js`) targeting local mock endpoints in `src/services/mockApi.js` with simulated delays. Ready to target the real backend URL parameters.

@@ -1,0 +1,413 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Design System — CurationPilot Docs</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css">
+  <style>
+    /* Custom style swatches for this page specifically */
+    .color-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+      gap: 1.25rem;
+      margin: 1.5rem 0 2.5rem 0;
+    }
+    .swatch-card {
+      background: var(--color-surface);
+      border: 1px solid var(--color-border);
+      border-radius: var(--radius-md);
+      overflow: hidden;
+      box-shadow: var(--shadow-sm);
+      display: flex;
+      flex-direction: column;
+    }
+    .swatch-color {
+      height: 100px;
+      width: 100%;
+    }
+    .swatch-details {
+      padding: 0.85rem;
+      display: flex;
+      flex-direction: column;
+      gap: 0.2rem;
+    }
+    .swatch-name {
+      font-size: 0.8rem;
+      font-family: 'JetBrains Mono', monospace;
+      font-weight: 600;
+      color: var(--color-text);
+    }
+    .swatch-hex {
+      font-size: 0.75rem;
+      color: var(--color-text-muted);
+    }
+    .swatch-usage {
+      font-size: 0.75rem;
+      margin-top: 0.4rem;
+      color: var(--color-text);
+      border-top: 1px solid var(--color-bg);
+      padding-top: 0.4rem;
+    }
+    .token-table code {
+      color: #b0541e;
+    }
+    .example-preview {
+      border: 1px dashed var(--color-border);
+      padding: 1.5rem;
+      border-radius: var(--radius-md);
+      background: var(--color-bg);
+      margin: 1rem 0 2rem 0;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 1rem;
+      align-items: center;
+    }
+    /* Buttons representation */
+    .btn-demo {
+      padding: 0.6rem 1.2rem;
+      font-size: 0.875rem;
+      font-weight: 600;
+      border-radius: var(--radius-sm);
+      border: none;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+    .btn-demo-primary {
+      background-color: var(--color-primary);
+      color: white;
+    }
+    .btn-demo-secondary {
+      background-color: transparent;
+      border: 1px solid var(--color-border);
+      color: var(--color-text);
+    }
+    .btn-demo-ghost {
+      background-color: transparent;
+      color: var(--color-text-muted);
+    }
+    .btn-demo-ghost:hover {
+      background-color: var(--color-primary-soft);
+      color: var(--color-text);
+    }
+    .input-demo {
+      border: 1px solid var(--color-border);
+      border-radius: var(--radius-sm);
+      padding: 0.6rem 0.85rem;
+      font-family: inherit;
+      font-size: 0.875rem;
+      color: var(--color-text);
+      background: white;
+      width: 250px;
+    }
+    .input-demo:focus {
+      outline: none;
+      border-color: var(--color-primary);
+      box-shadow: 0 0 0 3px var(--color-primary-soft);
+    }
+    .bubble-demo {
+      padding: 0.75rem 1.25rem;
+      border-radius: var(--radius-lg);
+      font-size: 0.875rem;
+      max-width: 350px;
+    }
+    .bubble-demo-system {
+      background-color: var(--color-surface);
+      color: var(--color-text);
+      border: 1px solid var(--color-border);
+    }
+    .bubble-demo-user {
+      background-color: var(--color-primary-soft);
+      color: var(--color-text);
+      border: 1px solid transparent;
+      align-self: flex-end;
+    }
+  </style>
+</head>
+<body>
+  <div class="layout-container">
+    <!-- Sidebar Navigation -->
+    <aside class="sidebar">
+      <div class="sidebar-brand">
+        <span class="brand-logo">🎛️</span>
+        <span class="brand-name">CurationPilot</span>
+      </div>
+      <div class="sidebar-version">v1.1.0 · Docs</div>
+      <nav class="sidebar-nav">
+        <a href="project-overview.html" class="nav-item" id="nav-project-overview">Overview</a>
+        <a href="architecture.html" class="nav-item" id="nav-architecture">Architecture</a>
+        <a href="design-system.html" class="nav-item active" id="nav-design-system">Design System</a>
+        <a href="api-specification.html" class="nav-item" id="nav-api-specification">REST API Spec</a>
+        <a href="testing-polling-guide.html" class="nav-item" id="nav-testing-polling-guide">Polling Testing Guide</a>
+        <a href="websocket-specification.html" class="nav-item" id="nav-websocket-specification">WebSocket Spec</a>
+      </nav>
+    </aside>
+
+    <!-- Main Content Panel -->
+    <main class="main-content">
+      <article class="content-article">
+        <h1>Frontend Design System</h1>
+        
+        <div class="meta-block">
+          <div class="meta-item">
+            <span class="meta-label">Theme:</span>
+            <span class="alert-title"><span class="badge-get" style="padding: 0.1rem 0.4rem; font-size: 0.75rem;">Warm Pastels</span></span>
+          </div>
+          <div class="meta-item">
+            <span class="meta-label">Updated:</span>
+            <span>June 15, 2026</span>
+          </div>
+        </div>
+
+        <section>
+          <h2>Color Palette (Warm Pastels)</h2>
+          <p>The interface uses a curated, warm pastel-toned color palette designed to feel premium, lightweight, and organic. Standard pure blues or reds are avoided in favor of HSL-derived earthy pigments.</p>
+          
+          <div class="color-grid">
+            <div class="swatch-card">
+              <div class="swatch-color" style="background-color: #F9F5F0; border-bottom: 1px solid var(--color-border)"></div>
+              <div class="swatch-details">
+                <span class="swatch-name">--color-surface</span>
+                <span class="swatch-hex">#F9F5F0</span>
+                <span class="swatch-usage">Page canvas background</span>
+              </div>
+            </div>
+            
+            <div class="swatch-card">
+              <div class="swatch-color" style="background-color: #FFFFFF; border-bottom: 1px solid var(--color-border)"></div>
+              <div class="swatch-details">
+                <span class="swatch-name">--color-surface-raised</span>
+                <span class="swatch-hex">#FFFFFF</span>
+                <span class="swatch-usage">Cards, forms, chat box</span>
+              </div>
+            </div>
+            
+            <div class="swatch-card">
+              <div class="swatch-color" style="background-color: #E8A87C;"></div>
+              <div class="swatch-details">
+                <span class="swatch-name">--color-primary</span>
+                <span class="swatch-hex">#E8A87C</span>
+                <span class="swatch-usage">Peach Coral primary links</span>
+              </div>
+            </div>
+            
+            <div class="swatch-card">
+              <div class="swatch-color" style="background-color: #FEF0E7;"></div>
+              <div class="swatch-details">
+                <span class="swatch-name">--color-primary-soft</span>
+                <span class="swatch-hex">#FEF0E7</span>
+                <span class="swatch-usage">User speech bubble highlight</span>
+              </div>
+            </div>
+            
+            <div class="swatch-card">
+              <div class="swatch-color" style="background-color: #3D3229;"></div>
+              <div class="swatch-details">
+                <span class="swatch-name">--color-text</span>
+                <span class="swatch-hex">#3D3229</span>
+                <span class="swatch-usage">Warm dark brown body text</span>
+              </div>
+            </div>
+            
+            <div class="swatch-card">
+              <div class="swatch-color" style="background-color: #8C7E73;"></div>
+              <div class="swatch-details">
+                <span class="swatch-name">--color-text-muted</span>
+                <span class="swatch-hex">#8C7E73</span>
+                <span class="swatch-usage">Secondary labels & subtext</span>
+              </div>
+            </div>
+            
+            <div class="swatch-card">
+              <div class="swatch-color" style="background-color: #7DB5A0;"></div>
+              <div class="swatch-details">
+                <span class="swatch-name">--color-success</span>
+                <span class="swatch-hex">#7DB5A0</span>
+                <span class="swatch-usage">Sage Mint success states</span>
+              </div>
+            </div>
+            
+            <div class="swatch-card">
+              <div class="swatch-color" style="background-color: #E4B87C;"></div>
+              <div class="swatch-details">
+                <span class="swatch-name">--color-warning</span>
+                <span class="swatch-hex">#E4B87C</span>
+                <span class="swatch-usage">Soft gold warning/running</span>
+              </div>
+            </div>
+            
+            <div class="swatch-card">
+              <div class="swatch-color" style="background-color: #D98B8B;"></div>
+              <div class="swatch-details">
+                <span class="swatch-name">--color-error</span>
+                <span class="swatch-hex">#D98B8B</span>
+                <span class="swatch-usage">Soft rose error blocks</span>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <section>
+          <h2>Typography & Scaling</h2>
+          <p>Typography is driven by Google Fonts: <strong>Inter</strong> for user interface text and headings, and <strong>JetBrains Mono</strong> for parameters, logs, and codes.</p>
+          
+          <table class="token-table">
+            <thead>
+              <tr>
+                <th>CSS Variable Token</th>
+                <th>Calculated Value</th>
+                <th>Equivalent Line Height</th>
+                <th>Standard Usage</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td><code>--text-xs</code></td>
+                <td>0.75rem (12px)</td>
+                <td>1rem</td>
+                <td style="font-size: 0.75rem;">Timestamps, metadata labels, tags.</td>
+              </tr>
+              <tr>
+                <td><code>--text-sm</code></td>
+                <td>0.875rem (14px)</td>
+                <td>1.25rem</td>
+                <td style="font-size: 0.875rem;">Secondary copy, labels, help text.</td>
+              </tr>
+              <tr>
+                <td><code>--text-base</code></td>
+                <td>1rem (16px)</td>
+                <td>1.5rem</td>
+                <td style="font-size: 1rem;">Primary body text, form inputs, button text.</td>
+              </tr>
+              <tr>
+                <td><code>--text-lg</code></td>
+                <td>1.125rem (18px)</td>
+                <td>1.75rem</td>
+                <td style="font-size: 1.125rem; font-weight: 600;">Log box headers, section dividers, card titles.</td>
+              </tr>
+              <tr>
+                <td><code>--text-xl</code></td>
+                <td>1.5rem (24px)</td>
+                <td>2rem</td>
+                <td style="font-size: 1.5rem; font-weight: 700;">Page headers, modal headings.</td>
+              </tr>
+            </tbody>
+          </table>
+        </section>
+
+        <section>
+          <h2>Spacing Scale</h2>
+          <p>A mathematical 4px-base spacing scale handles all margins, paddings, and flex/grid gaps:</p>
+          <table>
+            <thead>
+              <tr>
+                <th>Spacing Token</th>
+                <th>Rem Value</th>
+                <th>Pixel Equivalent</th>
+                <th>Common Layout Application</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td><code>--space-1</code></td>
+                <td>0.25rem</td>
+                <td>4px</td>
+                <td>Inner element margins, small bullet spacing.</td>
+              </tr>
+              <tr>
+                <td><code>--space-2</code></td>
+                <td>0.5rem</td>
+                <td>8px</td>
+                <td>Gap inside controls, padding for inputs.</td>
+              </tr>
+              <tr>
+                <td><code>--space-3</code></td>
+                <td>0.75rem</td>
+                <td>12px</td>
+                <td>Flex alignments, bubble message gaps.</td>
+              </tr>
+              <tr>
+                <td><code>--space-4</code></td>
+                <td>1rem</td>
+                <td>16px</td>
+                <td>Padding for simple buttons, margins on labels.</td>
+              </tr>
+              <tr>
+                <td><code>--space-5</code></td>
+                <td>1.5rem</td>
+                <td>24px</td>
+                <td>Padding for small cards, gap between sections.</td>
+              </tr>
+              <tr>
+                <td><code>--space-6</code></td>
+                <td>2rem</td>
+                <td>32px</td>
+                <td>Padding for large panels, layout columns gap.</td>
+              </tr>
+              <tr>
+                <td><code>--space-8</code></td>
+                <td>3rem</td>
+                <td>48px</td>
+                <td>Hero header spacing, page body margins.</td>
+              </tr>
+            </tbody>
+          </table>
+        </section>
+
+        <section>
+          <h2>Borders, Shadows & Radius</h2>
+          <p>Components utilize gentle shadows with low opacity to stand out from the page background, avoiding harsh lines.</p>
+          <ul>
+            <li><strong>Border Radius</strong>:
+              <ul>
+                <li><code>--radius-sm</code>: 4px — small tags, badges.</li>
+                <li><code>--radius-md</code>: 8px — inputs, dropdown selections, buttons.</li>
+                <li><code>--radius-lg</code>: 12px — cards, parameters grid boxes.</li>
+                <li><code>--radius-xl</code>: 16px — speech bubbles.</li>
+              </ul>
+            </li>
+            <li><strong>Shadows</strong>:
+              <ul>
+                <li><code>--shadow-sm</code>: <code>0 1px 2px rgba(61,50,41,0.05)</code> — simple raised buttons.</li>
+                <li><code>--shadow-md</code>: <code>0 4px 12px rgba(61,50,41,0.08)</code> — sidebar elements, dropdown sheets.</li>
+                <li><code>--shadow-lg</code>: <code>0 8px 24px rgba(61,50,41,0.12)</code> — modal dialog overlays.</li>
+              </ul>
+            </li>
+          </ul>
+        </section>
+
+        <section>
+          <h2>Interactive Component Patterns</h2>
+          
+          <h3>Action Buttons</h3>
+          <div class="example-preview">
+            <button class="btn-demo btn-demo-primary">Primary Button</button>
+            <button class="btn-demo btn-demo-secondary">Secondary Option</button>
+            <button class="btn-demo btn-demo-ghost">Ghost Link</button>
+          </div>
+          
+          <h3>Input Text Fields</h3>
+          <div class="example-preview">
+            <input type="text" class="input-demo" placeholder="Focus me to see border glow..." value="https://invoices.acme.com">
+          </div>
+          
+          <h3>Chat Bubbles</h3>
+          <div class="example-preview" style="flex-direction: column; align-items: stretch;">
+            <div class="bubble-demo bubble-demo-system">
+              <strong>System Message</strong>: Select the skill you would like to execute in the panel.
+            </div>
+            <div class="bubble-demo bubble-demo-user">
+              <strong>User (Params Submitted)</strong>: URL: https://acme.com, Range: 2026-06-01.
+            </div>
+          </div>
+        </section>
+      </article>
+    </main>
+  </div>
+</body>
+</html>

@@ -1,0 +1,513 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>REST API Specification — CurationPilot Docs</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <div class="layout-container">
+    <!-- Sidebar Navigation -->
+    <aside class="sidebar">
+      <div class="sidebar-brand">
+        <span class="brand-logo">🎛️</span>
+        <span class="brand-name">CurationPilot</span>
+      </div>
+      <div class="sidebar-version">v1.1.0 · Docs</div>
+      <nav class="sidebar-nav">
+        <a href="project-overview.html" class="nav-item" id="nav-project-overview">Overview</a>
+        <a href="architecture.html" class="nav-item" id="nav-architecture">Architecture</a>
+        <a href="design-system.html" class="nav-item" id="nav-design-system">Design System</a>
+        <a href="api-specification.html" class="nav-item active" id="nav-api-specification">REST API Spec</a>
+        <a href="testing-polling-guide.html" class="nav-item" id="nav-testing-polling-guide">Polling Testing Guide</a>
+        <a href="websocket-specification.html" class="nav-item" id="nav-websocket-specification">WebSocket Spec</a>
+      </nav>
+    </aside>
+
+    <!-- Main Content Panel -->
+    <main class="main-content">
+      <article class="content-article">
+        <h1>REST API Specification</h1>
+        
+        <div class="meta-block">
+          <div class="meta-item">
+            <span class="meta-label">Version:</span>
+            <span>1.1.0</span>
+          </div>
+          <div class="meta-item">
+            <span class="meta-label">Base URL:</span>
+            <code>http://localhost:8080/api</code>
+          </div>
+        </div>
+
+        <section>
+          <h2>Overview</h2>
+          <p>This document defines the REST API contract between the CurationPilot frontend and backend. The frontend consumes these endpoints to list skills, submit single and bulk execution requests, toggle execution status (pause/resume/cancel), and handle human-in-the-loop verification (approve/reject).</p>
+        </section>
+
+        <section>
+          <h2>Authentication</h2>
+          <p>No authentication is required in the current version. Auth headers (JWT bearer tokens) will be added in a future security iteration.</p>
+        </section>
+
+        <section>
+          <h2>Common Response Format</h2>
+          <p>All REST API responses are wrapped in a standard JSON envelope:</p>
+          
+          <pre><code>{
+  "success": true,
+  "data": { ... },
+  "error": null
+}</code></pre>
+          
+          <p>Error responses (HTTP 4xx/5xx status codes) follow this envelope structure:</p>
+          <pre><code>{
+  "success": false,
+  "data": null,
+  "error": {
+    "code": "SKILL_NOT_FOUND",
+    "message": "Skill with ID 'skill_999' does not exist"
+  }
+}</code></pre>
+        </section>
+
+        <div class="divider"></div>
+
+        <section>
+          <h2>Endpoints</h2>
+
+          <!-- GET /api/skills -->
+          <div style="margin-bottom: 3rem;">
+            <h3>1. List Skills</h3>
+            <p style="margin-bottom: 0.5rem;"><span class="api-badge badge-get">GET</span><code>/api/skills</code></p>
+            <p>Returns all available skills grouped by category, with metadata counters.</p>
+            
+            <h4>Query Parameters:</h4>
+            <table>
+              <thead>
+                <tr>
+                  <th>Parameter</th>
+                  <th>Type</th>
+                  <th>Required</th>
+                  <th>Description</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td><code>search</code></td>
+                  <td>string</td>
+                  <td>No</td>
+                  <td>Filter skills by name or description (case-insensitive partial match).</td>
+                </tr>
+              </tbody>
+            </table>
+
+            <h4>Response Data:</h4>
+            <pre><code>{
+  "success": true,
+  "data": {
+    "categories": [
+      {
+        "id": "cat_data_extraction",
+        "name": "Data Extraction",
+        "skills": [
+          {
+            "id": "skill_001",
+            "name": "Extract Invoice Data",
+            "description": "Navigates to the invoicing portal and extracts line items for a given date range",
+            "category": "Data Extraction",
+            "parameterCount": 4,
+            "lastExecuted": "2026-06-14T10:30:00Z",
+            "executionCount": 47
+          }
+        ]
+      }
+    ],
+    "totalSkills": 5
+  }
+}</code></pre>
+          </div>
+
+          <!-- GET /api/skills/:id -->
+          <div style="margin-bottom: 3rem;">
+            <h3>2. Get Skill Details</h3>
+            <p style="margin-bottom: 0.5rem;"><span class="api-badge badge-get">GET</span><code>/api/skills/:id</code></p>
+            <p>Returns full skill metadata including its input parameter schema structure.</p>
+            
+            <h4>Path Parameters:</h4>
+            <table>
+              <thead>
+                <tr>
+                  <th>Parameter</th>
+                  <th>Type</th>
+                  <th>Description</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td><code>id</code></td>
+                  <td>string</td>
+                  <td>Skill ID (e.g., <code>skill_001</code>).</td>
+                </tr>
+              </tbody>
+            </table>
+
+            <h4>Response Data:</h4>
+            <pre><code>{
+  "success": true,
+  "data": {
+    "id": "skill_001",
+    "name": "Extract Invoice Data",
+    "description": "Navigates to the invoicing portal and extracts line items for a given date range",
+    "category": "Data Extraction",
+    "estimatedDuration": "2-5 minutes",
+    "parameters": [
+      {
+        "name": "portal_url",
+        "label": "Portal URL",
+        "type": "url",
+        "required": true,
+        "placeholder": "https://invoices.example.com",
+        "helpText": "The full URL of the invoicing portal login page",
+        "defaultValue": null
+      },
+      {
+        "name": "date_range_start",
+        "label": "Start Date",
+        "type": "date",
+        "required": true,
+        "placeholder": "",
+        "helpText": "Beginning of the extraction period",
+        "defaultValue": null
+      },
+      {
+        "name": "date_range_end",
+        "label": "End Date",
+        "type": "date",
+        "required": true,
+        "placeholder": "",
+        "helpText": "End of the extraction period",
+        "defaultValue": null
+      },
+      {
+        "name": "vendor_ids",
+        "label": "Vendor IDs",
+        "type": "comma_separated",
+        "required": false,
+        "placeholder": "V001, V002, V003",
+        "helpText": "Comma-separated list of vendor IDs to filter. Leave empty for all vendors.",
+        "defaultValue": null
+      }
+    ]
+  }
+}</code></pre>
+          </div>
+
+          <!-- Parameter Types -->
+          <div style="margin-bottom: 3rem;">
+            <h3>3. Supported Parameter Types</h3>
+            <p>The parameter <code>type</code> determines how the input element is rendered in the UI form:</p>
+            <table>
+              <thead>
+                <tr>
+                  <th>Type Value</th>
+                  <th>UI Rendered Input</th>
+                  <th>Sent JSON Format</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td><code>text</code></td>
+                  <td>Single line text input box</td>
+                  <td><code>"string value"</code></td>
+                </tr>
+                <tr>
+                  <td><code>textarea</code></td>
+                  <td>Multi-line large textarea</td>
+                  <td><code>"multi\nline\nvalue"</code></td>
+                </tr>
+                <tr>
+                  <td><code>number</code></td>
+                  <td>Numeric spinbox</td>
+                  <td><code>123</code> or <code>1.5</code></td>
+                </tr>
+                <tr>
+                  <td><code>url</code></td>
+                  <td>Validated text input URL field</td>
+                  <td><code>"https://example.com"</code></td>
+                </tr>
+                <tr>
+                  <td><code>email</code></td>
+                  <td>Validated email text field</td>
+                  <td><code>"user@domain.com"</code></td>
+                </tr>
+                <tr>
+                  <td><code>date</code></td>
+                  <td>Calendar date selector picker</td>
+                  <td><code>"2026-06-15"</code> (ISO 8601 string)</td>
+                </tr>
+                <tr>
+                  <td><code>select</code></td>
+                  <td>Single-select dropdown selection</td>
+                  <td><code>"option_value"</code></td>
+                </tr>
+                <tr>
+                  <td><code>comma_separated</code></td>
+                  <td>Text field converting to Array</td>
+                  <td><code>["val1", "val2"]</code></td>
+                </tr>
+                <tr>
+                  <td><code>boolean</code></td>
+                  <td>Toggle slider switch</td>
+                  <td><code>true</code> or <code>false</code></td>
+                </tr>
+                <tr>
+                  <td><code>password</code></td>
+                  <td>Masked password input text box</td>
+                  <td><code>"secret_token"</code></td>
+                </tr>
+              </tbody>
+            </table>
+
+            <div class="alert alert-important">
+              <div class="alert-title">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12.01" y2="8"/><path d="M12 12v4"/></svg>
+                CSV Column Separator Parsing Rule
+              </div>
+              <p style="margin: 0;">To prevent conflict with outer CSV delimiters, fields marked as <code>comma_separated</code> are split in CSV cells using **semicolons (<code>;</code>)** (e.g., <code>V01;V02;V03</code>). In manual form configuration inputs, standard **commas (<code>,</code>)** are used instead.</p>
+            </div>
+          </div>
+
+          <!-- POST /api/executions -->
+          <div style="margin-bottom: 3rem;">
+            <h3>4. Submit Execution</h3>
+            <p style="margin-bottom: 0.5rem;"><span class="api-badge badge-post">POST</span><code>/api/executions</code></p>
+            <p>Submits a Playwright automation execution request. Supports single and bulk runs.</p>
+            
+            <h4>Single Execution Payload:</h4>
+            <pre><code>{
+  "skillId": "skill_001",
+  "parameters": {
+    "portal_url": "https://invoices.acme.com",
+    "date_range_start": "2026-06-01",
+    "date_range_end": "2026-06-15",
+    "vendor_ids": ["V001", "V003"]
+  }
+}</code></pre>
+
+            <h4>CSV Bulk Run Payload:</h4>
+            <pre><code>{
+  "skillId": "skill_001",
+  "parameters": {
+    "isBulk": true,
+    "rowCount": 12,
+    "csvRows": [
+      {
+        "portal_url": "https://invoices.company-a.com",
+        "date_range_start": "2026-06-01",
+        "date_range_end": "2026-06-15",
+        "vendor_ids": ["V001", "V002"]
+      },
+      {
+        "portal_url": "https://portal.invoice-hub.net",
+        "date_range_start": "2026-05-01",
+        "date_range_end": "2026-05-31",
+        "vendor_ids": ["V009"]
+      }
+    ],
+    // Fallback: The properties from the first CSV row are ALSO merged into the root of `parameters`
+    "portal_url": "https://invoices.company-a.com",
+    "date_range_start": "2026-06-01",
+    "date_range_end": "2026-06-15",
+    "vendor_ids": ["V001", "V002"]
+  }
+}</code></pre>
+
+            <div class="alert alert-note">
+              <div class="alert-title">Backward Compatibility Fallback</div>
+              If the backend does not support bulk CSV operations yet, the first element of <code>csvRows</code> is mirrored flat at the root of the <code>parameters</code> object so the runner can fall back to executing a single run.
+            </div>
+
+            <h4>Response:</h4>
+            <pre><code>{
+  "success": true,
+  "data": {
+    "executionId": "exec_abc123",
+    "status": "queued",
+    "skillId": "skill_001",
+    "submittedAt": "2026-06-15T10:30:00Z"
+  }
+}</code></pre>
+          </div>
+
+          <!-- GET /api/executions/:id -->
+          <div style="margin-bottom: 3rem;">
+            <h3>5. Get Execution Status</h3>
+            <p style="margin-bottom: 0.5rem;"><span class="api-badge badge-get">GET</span><code>/api/executions/:id</code></p>
+            <p>Monitors execution progress percentages, active steps, log traces, and final outcomes. This endpoint is polled repeatedly by the frontend client every 1.5s.</p>
+
+            <h4>Response (Running state):</h4>
+            <pre><code>{
+  "success": true,
+  "data": {
+    "executionId": "exec_abc123",
+    "status": "running",
+    "skillId": "skill_001",
+    "skillName": "Extract Invoice Data",
+    "submittedAt": "2026-06-15T10:30:00Z",
+    "startedAt": "2026-06-15T10:30:02Z",
+    "completedAt": null,
+    "progress": {
+      "currentStep": 3,
+      "totalSteps": 8,
+      "currentStepName": "Navigating to invoice list",
+      "percentage": 37
+    },
+    "logs": [
+      { "timestamp": "2026-06-15T10:30:02Z", "level": "info", "message": "Opening browser..." },
+      { "timestamp": "2026-06-15T10:30:03Z", "level": "info", "message": "Navigating to portal..." },
+      { "timestamp": "2026-06-15T10:30:05Z", "level": "info", "message": "Step 3/8: Logging in" }
+    ]
+  }
+}</code></pre>
+          </div>
+
+          <!-- Control Actions -->
+          <div style="margin-bottom: 3rem;">
+            <h3>6. Control Actions (Pause, Resume, Cancel)</h3>
+            <p>Control API calls alter execution state. To avoid UI delay, <strong>each control action must return the fully updated execution state object</strong> (matching the structure of <code>GET /api/executions/:id</code>).</p>
+
+            <h4>A. Pause Execution</h4>
+            <p style="margin-bottom: 0.5rem;"><span class="api-badge badge-post">POST</span><code>/api/executions/:id/pause</code></p>
+            <p>Instructs the browser runner to freeze current action steps. Status shifts to <code>"paused"</code>.</p>
+
+            <h4>B. Resume Execution</h4>
+            <p style="margin-bottom: 0.5rem;"><span class="api-badge badge-post">POST</span><code>/api/executions/:id/resume</code></p>
+            <p>Instructs a paused runner to continue step execution. Status shifts to <code>"running"</code>.</p>
+
+            <h4>C. Cancel Execution</h4>
+            <p style="margin-bottom: 0.5rem;"><span class="api-badge badge-post">POST</span><code>/api/executions/:id/cancel</code></p>
+            <p>Kills browser session runner. Status shifts to <code>"cancelled"</code>.</p>
+          </div>
+
+          <!-- HITL Actions -->
+          <div style="margin-bottom: 3rem;">
+            <h3>7. Human-In-The-Loop (HITL) Actions</h3>
+            <p>When the automation encounters a validation barrier (e.g. captcha validation, final transaction confirm), the status changes to <code>"waiting_for_user"</code>. Polling stops and the user is prompted to Approve or Reject.</p>
+
+            <h4>A. Approve HITL Step</h4>
+            <p style="margin-bottom: 0.5rem;"><span class="api-badge badge-post">POST</span><code>/api/executions/:id/approve</code></p>
+            <p>Confirms proceed action. Shakes off wait locks and transitions back to <code>"running"</code> status.</p>
+
+            <h4>B. Reject HITL Step</h4>
+            <p style="margin-bottom: 0.5rem;"><span class="api-badge badge-post">POST</span><code>/api/executions/:id/reject</code></p>
+            <p>Cancels proceed action. Shifts execution status directly to <code>"failed"</code> status.</p>
+          </div>
+        </section>
+
+        <div class="divider"></div>
+
+        <section>
+          <h2>Execution Status State Table</h2>
+          <p>The operational state machine has these defined statuses:</p>
+          <table>
+            <thead>
+              <tr>
+                <th>Status Name</th>
+                <th>Automation Engine State</th>
+                <th>Client Polling Activity</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td><code>queued</code></td>
+                <td>Awaiting slot allocation.</td>
+                <td>Active (1.5s interval)</td>
+              </tr>
+              <tr>
+                <td><code>running</code></td>
+                <td>Executing Playwright steps.</td>
+                <td>Active (1.5s interval)</td>
+              </tr>
+              <tr>
+                <td><code>paused</code></td>
+                <td>Suspended temporarily by user.</td>
+                <td><strong>Suspended (Halted)</strong></td>
+              </tr>
+              <tr>
+                <td><code>waiting_for_user</code></td>
+                <td>Halted awaiting manual verification.</td>
+                <td><strong>Suspended (Halted)</strong></td>
+              </tr>
+              <tr>
+                <td><code>completed</code></td>
+                <td>Finished operations successfully.</td>
+                <td><strong>Halted (Terminal)</strong></td>
+              </tr>
+              <tr>
+                <td><code>failed</code></td>
+                <td>Aborted due to error/rejection.</td>
+                <td><strong>Halted (Terminal)</strong></td>
+              </tr>
+              <tr>
+                <td><code>cancelled</code></td>
+                <td>Terminated by user click.</td>
+                <td><strong>Halted (Terminal)</strong></td>
+              </tr>
+            </tbody>
+          </table>
+        </section>
+
+        <section>
+          <h2>Error Codes</h2>
+          <table>
+            <thead>
+              <tr>
+                <th>Error Code</th>
+                <th>HTTP Code</th>
+                <th>Description / Cause</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td><code>SKILL_NOT_FOUND</code></td>
+                <td>404</td>
+                <td>The skill identifier in request path or body does not exist.</td>
+              </tr>
+              <tr>
+                <td><code>EXECUTION_NOT_FOUND</code></td>
+                <td>404</td>
+                <td>The requested execution tracker ID does not exist in logs.</td>
+              </tr>
+              <tr>
+                <td><code>INVALID_PARAMETERS</code></td>
+                <td>400</td>
+                <td>Input values failed regex validations or data types mismatch.</td>
+              </tr>
+              <tr>
+                <td><code>MISSING_REQUIRED_PARAM</code></td>
+                <td>400</td>
+                <td>Form omitted a parameter marked as <code>required: true</code>.</td>
+              </tr>
+              <tr>
+                <td><code>EXECUTION_ALREADY_COMPLETE</code></td>
+                <td>409</td>
+                <td>Rejected POST modification on an execution that has ended.</td>
+              </tr>
+              <tr>
+                <td><code>SERVER_ERROR</code></td>
+                <td>500</td>
+                <td>Internal exception thrown by automation browser controller.</td>
+              </tr>
+            </tbody>
+          </table>
+        </section>
+      </article>
+    </main>
+  </div>
+</body>
+</html>

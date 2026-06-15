@@ -1,0 +1,169 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Project Overview — CurationPilot Docs</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <div class="layout-container">
+    <!-- Sidebar Navigation -->
+    <aside class="sidebar">
+      <div class="sidebar-brand">
+        <span class="brand-logo">🎛️</span>
+        <span class="brand-name">CurationPilot</span>
+      </div>
+      <div class="sidebar-version">v1.1.0 · Docs</div>
+      <nav class="sidebar-nav">
+        <a href="project-overview.html" class="nav-item active" id="nav-project-overview">Overview</a>
+        <a href="architecture.html" class="nav-item" id="nav-architecture">Architecture</a>
+        <a href="design-system.html" class="nav-item" id="nav-design-system">Design System</a>
+        <a href="api-specification.html" class="nav-item" id="nav-api-specification">REST API Spec</a>
+        <a href="testing-polling-guide.html" class="nav-item" id="nav-testing-polling-guide">Polling Testing Guide</a>
+        <a href="websocket-specification.html" class="nav-item" id="nav-websocket-specification">WebSocket Spec</a>
+      </nav>
+    </aside>
+
+    <!-- Main Content Panel -->
+    <main class="main-content">
+      <article class="content-article">
+        <h1>CurationPilot — Project Overview</h1>
+        
+        <div class="meta-block">
+          <div class="meta-item">
+            <span class="meta-label">Status:</span>
+            <span class="alert-title"><span class="badge-post" style="padding: 0.1rem 0.4rem; font-size: 0.75rem;">Active</span></span>
+          </div>
+          <div class="meta-item">
+            <span class="meta-label">Updated:</span>
+            <span>June 15, 2026</span>
+          </div>
+        </div>
+
+        <section>
+          <h2>What is CurationPilot?</h2>
+          <p>CurationPilot is an AI-powered operations automation platform. It converts manual browser-based workflows into executable, parameterized <strong>skills</strong> — Playwright scripts that can be triggered on demand through an API interface.</p>
+          
+          <h3>The Automation Pipeline</h3>
+          <p>The platform bridges the gap between manual operations and automated workflows via a structured four-stage process:</p>
+          
+          <pre><code>Manual Workflow ➔ Playwright Script ➔ API Endpoint ➔ Frontend Interface</code></pre>
+          
+          <ol>
+            <li><strong>Skill Creation</strong>: Human operators perform tasks manually in the browser while the execution engine records actions.</li>
+            <li><strong>Script Generation</strong>: The recorded workflow is compiled into a Playwright script with parameterized inputs.</li>
+            <li><strong>API Exposure</strong>: Each script is exposed as a REST API endpoint that accepts dynamic parameters and executes the automation runner.</li>
+            <li><strong>Frontend Execution</strong>: Business users configure and trigger automations through this chat-like user interface, providing inputs manually or in bulk (via CSV files).</li>
+          </ol>
+        </section>
+
+        <section>
+          <h2>High-Level Architecture</h2>
+          <p>The system is split into two primary components communicating over REST and WebSocket layers:</p>
+          
+          <!-- Diagram using styling representation -->
+          <div style="background-color: var(--color-bg); padding: 1.5rem; border-radius: var(--radius-md); border: 1px solid var(--color-border); margin: 1.5rem 0;">
+            <pre style="margin: 0; background: transparent; border: none; box-shadow: none; padding: 0;"><code style="color: var(--color-text);">┌──────────────────────┐      REST / WebSocket      ┌──────────────────────┐
+│  Frontend Dashboard  │ ◄────────────────────────► │     Backend API      │
+│     (React/Vite)     │                            │   (NodeJS/Express)   │
+│                      │                            │                      │
+│ - Chat Timeline UI   │                            │  ┌────────────────┐  │
+│ - Skill Selectors    │                            │  │   Playwright   │  │
+│ - Dynamic Param Form │                            │  │  Script Runner │  │
+│ - Execution Controls │                            │  └────────────────┘  │
+└──────────────────────┘                            └──────────────────────┘</code></pre>
+          </div>
+        </section>
+
+        <section>
+          <h2>Role of the Frontend</h2>
+          <p>The frontend application serves as the user-facing command center. It is responsible for:</p>
+          <ul>
+            <li><strong>Listing Available Skills</strong>: Organized by category in a searchable dropdown selector.</li>
+            <li><strong>Parameter Configuration</strong>: Generating dynamic forms (text, numeric, selects, booleans, arrays) based on the skill's parameter schema.</li>
+            <li><strong>Bulk Execution Support</strong>: Ingesting and validating CSV files, rendering tabular previews, and converting rows into bulk executions.</li>
+            <li><strong>Execution Control</strong>: Enabling operators to Pause, Resume, or Cancel tasks mid-execution.</li>
+            <li><strong>Human-in-the-loop (HITL) Interactivity</strong>: Presenting confirmation modals during high-risk steps, enabling manual approval or rejection.</li>
+            <li><strong>Real-Time Logs & Progress</strong>: Showing percentages and streaming logs as steps advance.</li>
+            <li><strong>Session History</strong>: Saving and recovering past sessions from local storage.</li>
+          </ul>
+        </section>
+
+        <section>
+          <h2>Tech Stack</h2>
+          <table>
+            <thead>
+              <tr>
+                <th>Layer</th>
+                <th>Technology Choice</th>
+                <th>Usage & Description</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td><strong>Framework</strong></td>
+                <td>React 19</td>
+                <td>Functional components, hooks, Context API for state management.</td>
+              </tr>
+              <tr>
+                <td><strong>Build Tool</strong></td>
+                <td>Vite 8</td>
+                <td>Ultra-fast development server and production bundler.</td>
+              </tr>
+              <tr>
+                <td><strong>Styling</strong></td>
+                <td>Vanilla CSS</td>
+                <td>Custom CSS Variables (Design Tokens) matching the Warm-Pastel design theme.</td>
+              </tr>
+              <tr>
+                <td><strong>State & Persistence</strong></td>
+                <td>Context API & localStorage</td>
+                <td>Local session mapping, logs history, and active run states persist across refreshes.</td>
+              </tr>
+              <tr>
+                <td><strong>API Communication</strong></td>
+                <td>Fetch API & Short-Polling</td>
+                <td>REST integration layer. Polling is utilized until WebSockets are fully integrated.</td>
+              </tr>
+              <tr>
+                <td><strong>Real-Time Events</strong></td>
+                <td>WebSockets (Future Phase)</td>
+                <td>Scheduled to replace polling to enable true low-latency log streams.</td>
+              </tr>
+            </tbody>
+          </table>
+        </section>
+
+        <section>
+          <h2>Current Project Status</h2>
+          <div class="alert alert-note">
+            <div class="alert-title">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>
+              Frontend Milestone Achieved
+            </div>
+            All primary frontend components, layouts, parsing engines, state hooks, and control loops are fully implemented and integrated with local mock API endpoints.
+          </div>
+          
+          <ul>
+            <li><strong>Completed Features</strong>:
+              <ul>
+                <li>Chat-based timeline layout with responsive parameter submitted panels (90% width grids).</li>
+                <li>Dashed drag-and-drop CSV upload zone, custom client-side CSV parser, and horizontal-scrolling tabular preview.</li>
+                <li>Control panel toolbar on the execution timeline (Pause, Resume, Cancel).</li>
+                <li>Human-in-the-loop warning cards with Approve and Reject workflows.</li>
+                <li>Persistent execution log blocks inside the chat, featuring collapsible toggles.</li>
+                <li>Historical log console view and session history manager (search, load, delete).</li>
+              </ul>
+            </li>
+            <li><strong>Backend Status</strong>: Pending initialization. The API endpoints and structures defined in the <a href="api-specification.html">REST API Spec</a> must be implemented to integrate with the frontend.</li>
+          </ul>
+        </section>
+      </article>
+    </main>
+  </div>
+</body>
+</html>
