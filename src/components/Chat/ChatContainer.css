@@ -135,45 +135,6 @@
   box-shadow: var(--shadow-sm);
 }
 
-/* Scroll controls */
-.chat-scroll-controls {
-  position: absolute;
-  bottom: var(--space-6);
-  right: var(--space-6);
-  display: flex;
-  flex-direction: column;
-  gap: var(--space-2);
-  z-index: 100;
-}
-
-.scroll-btn {
-  width: 38px;
-  height: 38px;
-  border-radius: var(--radius-full);
-  background: var(--color-surface-raised);
-  border: 1.5px solid var(--color-border);
-  box-shadow: var(--shadow-md);
-  color: var(--color-text-muted);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  cursor: pointer;
-  transition: all var(--transition-fast);
-  animation: scaleIn var(--transition-fast) ease both;
-}
-
-.scroll-btn:hover {
-  background: var(--color-primary-soft);
-  border-color: var(--color-primary);
-  color: var(--color-primary-hover);
-  transform: translateY(-2px);
-}
-
-.scroll-btn:active {
-  transform: translateY(0);
-  box-shadow: var(--shadow-sm);
-}
-
 @media (max-width: 800px) {
   .chat-messages {
     padding: 0;

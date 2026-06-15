@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useAppState, useAppDispatch } from '../../context/AppContext';
 import { getSkillById } from '../../services/api';
 import './ParameterForm.css';
@@ -86,6 +86,7 @@ export default function ParameterForm() {
   const [csvFile, setCsvFile] = useState(null);
   const [csvRows, setCsvRows] = useState([]);
   const [csvError, setCsvError] = useState(null);
+  const fileInputRef = useRef(null);
 
   useEffect(() => {
     loadSkillParams();
@@ -170,6 +171,9 @@ export default function ParameterForm() {
     setCsvFile(null);
     setCsvRows([]);
     setCsvError(null);
+    if (fileInputRef.current) {
+      fileInputRef.current.value = '';
+    }
   }
 
   function validate() {
@@ -365,98 +369,102 @@ export default function ParameterForm() {
           ))
         ) : (
           <div className="csv-upload-container">
-            <p className="csv-upload-instruction">
-              Upload a CSV file to automate multiple executions. Each row in the CSV file represents a single automated run.
-            </p>
-            
-            <div className="csv-expected-cols">
-              <span className="csv-expected-title">Expected Columns (Headers):</span>
-              <div className="csv-cols-list">
-                {parameters.map((p) => (
-                  <span key={p.name} className={`csv-col-tag ${p.required ? 'csv-col-tag--required' : ''}`}>
-                    {p.name}{p.required && '*'}
-                  </span>
-                ))}
-              </div>
-            </div>
-
-            <div className="csv-dropzone">
-              <input
-                type="file"
-                accept=".csv"
-                onChange={handleCsvFileChange}
-                id="csv-file-input"
-                className="csv-file-hidden"
-              />
-              {csvFile ? (
-                <div className="csv-file-info">
-                  <svg className="csv-file-icon" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                    <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
-                    <polyline points="14 2 14 8 20 8" />
-                    <line x1="16" y1="13" x2="8" y2="13" />
-                    <line x1="16" y1="17" x2="8" y2="17" />
-                    <polyline points="10 9 9 9 8 9" />
-                  </svg>
-                  <div className="csv-file-text">
-                    <span className="csv-file-name">{csvFile.name}</span>
-                    <span className="csv-file-size">{(csvFile.size / 1024).toFixed(1)} KB</span>
+            {csvRows.length > 0 ? (
+              <div className="csv-loaded-view">
+                <div className="csv-loaded-header">
+                  <div className="csv-file-summary">
+                    <svg className="csv-file-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--color-success)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                      <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
+                      <polyline points="14 2 14 8 20 8" />
+                      <line x1="16" y1="13" x2="8" y2="13" />
+                      <line x1="16" y1="17" x2="8" y2="17" />
+                    </svg>
+                    <div className="csv-file-metadata">
+                      <span className="csv-file-name">{csvFile?.name}</span>
+                      <span className="csv-file-size-count">
+                        {(csvFile?.size / 1024).toFixed(1)} KB · {csvRows.length} rows loaded
+                      </span>
+                    </div>
                   </div>
                   <button type="button" className="csv-remove-btn" onClick={clearCsv}>
-                    Remove
+                    Remove CSV
                   </button>
                 </div>
-              ) : (
-                <label htmlFor="csv-file-input" className="csv-upload-label">
-                  <svg className="csv-upload-icon" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
-                    <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
-                    <polyline points="17 8 12 3 7 8" />
-                    <line x1="12" y1="3" x2="12" y2="15" />
-                  </svg>
-                  <span>Choose CSV file or drag here</span>
-                </label>
-              )}
-            </div>
 
-            {csvError && (
-              <p className="param-error csv-parse-error" role="alert">
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                  <circle cx="12" cy="12" r="10" />
-                  <line x1="12" y1="8" x2="12" y2="12" />
-                  <line x1="12" y1="16" x2="12.01" y2="16" />
-                </svg>
-                {csvError}
-              </p>
-            )}
-
-            {csvRows.length > 0 && (
-              <div className="csv-preview">
-                <div className="csv-preview-title">
-                  CSV Data ({csvRows.length} rows)
-                </div>
-                <div className="csv-preview-table-wrapper">
-                  <table className="csv-preview-table">
-                    <thead>
-                      <tr>
-                        {parameters.map((p) => (
-                          <th key={p.name}>{p.label}</th>
-                        ))}
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {csvRows.map((row, idx) => (
-                        <tr key={idx}>
+                <div className="csv-preview">
+                  <div className="csv-preview-title">CSV Data Table</div>
+                  <div className="csv-preview-table-wrapper">
+                    <table className="csv-preview-table">
+                      <thead>
+                        <tr>
                           {parameters.map((p) => (
-                            <td key={p.name}>
-                              {Array.isArray(row[p.name])
-                                ? row[p.name].join(', ')
-                                : String(row[p.name] ?? '—')}
-                            </td>
+                            <th key={p.name}>{p.label}</th>
                           ))}
                         </tr>
-                      ))}
-                    </tbody>
-                  </table>
+                      </thead>
+                      <tbody>
+                        {csvRows.map((row, idx) => (
+                          <tr key={idx}>
+                            {parameters.map((p) => (
+                              <td key={p.name}>
+                                {Array.isArray(row[p.name])
+                                  ? row[p.name].join(', ')
+                                  : String(row[p.name] ?? '—')}
+                              </td>
+                            ))}
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
                 </div>
+              </div>
+            ) : (
+              <div className="csv-initial-view">
+                <p className="csv-upload-instruction">
+                  Upload a CSV file to automate multiple executions. Each row in the CSV file represents a single automated run.
+                </p>
+                
+                <div className="csv-expected-cols">
+                  <span className="csv-expected-title">Expected Columns (Headers):</span>
+                  <div className="csv-cols-list">
+                    {parameters.map((p) => (
+                      <span key={p.name} className={`csv-col-tag ${p.required ? 'csv-col-tag--required' : ''}`}>
+                        {p.name}{p.required && '*'}
+                      </span>
+                    ))}
+                  </div>
+                </div>
+
+                <div className="csv-dropzone">
+                  <input
+                    type="file"
+                    accept=".csv"
+                    onChange={handleCsvFileChange}
+                    ref={fileInputRef}
+                    id="csv-file-input"
+                    className="csv-file-hidden"
+                  />
+                  <label htmlFor="csv-file-input" className="csv-upload-label">
+                    <svg className="csv-upload-icon" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+                      <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+                      <polyline points="17 8 12 3 7 8" />
+                      <line x1="12" y1="3" x2="12" y2="15" />
+                    </svg>
+                    <span>Choose CSV file or drag here</span>
+                  </label>
+                </div>
+
+                {csvError && (
+                  <p className="param-error csv-parse-error" role="alert">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                      <circle cx="12" cy="12" r="10" />
+                      <line x1="12" y1="8" x2="12" y2="12" />
+                      <line x1="12" y1="16" x2="12.01" y2="16" />
+                    </svg>
+                    {csvError}
+                  </p>
+                )}
               </div>
             )}
           </div>

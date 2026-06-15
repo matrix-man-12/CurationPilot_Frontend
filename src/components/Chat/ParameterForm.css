@@ -464,3 +464,58 @@ select.form-input {
 .csv-preview-table tr:last-child td {
   border-bottom: none;
 }
+
+/* CSV Loaded State View */
+.csv-loaded-view {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+  animation: fadeIn var(--transition-base) ease;
+}
+
+.csv-loaded-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  padding: var(--space-3) var(--space-4);
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-sm);
+}
+
+.csv-file-summary {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  min-width: 0;
+}
+
+.csv-file-metadata {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  min-width: 0;
+}
+
+.csv-file-metadata .csv-file-name {
+  font-size: var(--text-sm);
+  font-weight: var(--weight-bold);
+  color: var(--color-text);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  width: 100%;
+}
+
+.csv-file-size-count {
+  font-size: 0.7rem;
+  color: var(--color-text-muted);
+  font-family: var(--font-mono);
+}
+
+.csv-initial-view {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+}
