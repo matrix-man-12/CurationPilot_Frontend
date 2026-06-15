@@ -11,6 +11,8 @@ export {
   initExecution,
   getExecutionStatus,
   cancelExecution,
+  approveExecution,
+  rejectExecution,
 } from './mockApi.js';
 
 /**

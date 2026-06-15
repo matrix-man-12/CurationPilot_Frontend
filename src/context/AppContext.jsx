@@ -139,6 +139,28 @@ function appReducer(state, action) {
         },
       };
 
+    case 'UPDATE_LOGS': {
+      const updatedMessages = state.activeSession.messages.map((msg) => {
+        if (msg.content === 'executing') {
+          return {
+            ...msg,
+            meta: {
+              ...msg.meta,
+              logs: action.payload,
+            },
+          };
+        }
+        return msg;
+      });
+      return {
+        ...state,
+        activeSession: {
+          ...state.activeSession,
+          messages: updatedMessages,
+        },
+      };
+    }
+
     case 'COMPLETE_EXECUTION': {
       const now = new Date().toISOString();
       const completedSession = {

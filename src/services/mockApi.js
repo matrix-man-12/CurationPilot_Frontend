@@ -96,7 +96,31 @@ export async function submitExecution(skillId, parameters) {
  * In reality this would be a single GET endpoint or WebSocket.
  * Here we track state in a closure-based store.
  */
-const executionStore = new Map();
+const STORAGE_KEY_EXEC_STORE = 'curationpilot_execution_store';
+
+function loadExecutionStore() {
+  try {
+    const raw = localStorage.getItem(STORAGE_KEY_EXEC_STORE);
+    if (raw) {
+      const parsed = JSON.parse(raw);
+      return new Map(Object.entries(parsed));
+    }
+  } catch (e) {
+    console.error('Failed to load execution store', e);
+  }
+  return new Map();
+}
+
+const executionStore = loadExecutionStore();
+
+function saveExecutionStore() {
+  try {
+    const obj = Object.fromEntries(executionStore.entries());
+    localStorage.setItem(STORAGE_KEY_EXEC_STORE, JSON.stringify(obj));
+  } catch (e) {
+    console.error('Failed to save execution store', e);
+  }
+}
 
 export function initExecution(executionId, skillName) {
   executionStore.set(executionId, {
@@ -108,7 +132,9 @@ export function initExecution(executionId, skillName) {
     logs: [],
     startedAt: null,
     completedAt: null,
+    userConfirmed: false,
   });
+  saveExecutionStore();
 }
 
 export async function getExecutionStatus(executionId) {
@@ -132,33 +158,48 @@ export async function getExecutionStatus(executionId) {
       level: 'info',
       message: 'Execution started',
     });
+    saveExecutionStore();
   } else if (exec.status === 'running') {
-    if (exec.currentStep < exec.totalSteps) {
-      const stepName = EXECUTION_STEPS[exec.currentStep];
-      exec.currentStep += 1;
+    // Trigger Human-in-the-loop state at step 4
+    if (exec.currentStep === 4 && !exec.userConfirmed) {
+      exec.status = 'waiting_for_user';
       exec.logs.push({
         timestamp: new Date().toISOString(),
-        level: 'info',
-        message: `Step ${exec.currentStep}/${exec.totalSteps}: ${stepName}`,
+        level: 'warn',
+        message: 'Awaiting human-in-the-loop approval to proceed with transaction submission.',
       });
-    }
+      saveExecutionStore();
+    } else {
+      if (exec.currentStep < exec.totalSteps) {
+        const stepName = EXECUTION_STEPS[exec.currentStep];
+        exec.currentStep += 1;
+        exec.logs.push({
+          timestamp: new Date().toISOString(),
+          level: 'info',
+          message: `Step ${exec.currentStep}/${exec.totalSteps}: ${stepName}`,
+        });
+      }
 
-    if (exec.currentStep >= exec.totalSteps) {
-      exec.status = 'completed';
-      exec.completedAt = new Date().toISOString();
-      exec.logs.push({
-        timestamp: new Date().toISOString(),
-        level: 'info',
-        message: 'Execution completed successfully',
-      });
-      exec.result = {
-        summary: `Successfully completed "${exec.skillName}"`,
-        data: {
-          recordsProcessed: Math.floor(Math.random() * 50) + 10,
-          duration: `${Math.floor(Math.random() * 4) + 1}m ${Math.floor(Math.random() * 60)}s`,
-        },
-      };
+      if (exec.currentStep >= exec.totalSteps) {
+        exec.status = 'completed';
+        exec.completedAt = new Date().toISOString();
+        exec.logs.push({
+          timestamp: new Date().toISOString(),
+          level: 'info',
+          message: 'Execution completed successfully',
+        });
+        exec.result = {
+          summary: `Successfully completed "${exec.skillName}"`,
+          data: {
+            recordsProcessed: Math.floor(Math.random() * 50) + 10,
+            duration: `${Math.floor(Math.random() * 4) + 1}m ${Math.floor(Math.random() * 60)}s`,
+          },
+        };
+      }
+      saveExecutionStore();
     }
+  } else if (exec.status === 'waiting_for_user') {
+    // Keep it here until approve or reject is called
   }
 
   return {
@@ -168,7 +209,7 @@ export async function getExecutionStatus(executionId) {
       progress: {
         currentStep: exec.currentStep,
         totalSteps: exec.totalSteps,
-        currentStepName: EXECUTION_STEPS[Math.min(exec.currentStep, EXECUTION_STEPS.length - 1)],
+        currentStepName: exec.status === 'waiting_for_user' ? 'Awaiting Human-in-the-loop approval' : EXECUTION_STEPS[Math.min(exec.currentStep, EXECUTION_STEPS.length - 1)],
         percentage: Math.round((exec.currentStep / exec.totalSteps) * 100),
       },
     },
@@ -196,9 +237,50 @@ export async function cancelExecution(executionId) {
     level: 'warn',
     message: 'Execution cancelled by user',
   });
+  saveExecutionStore();
 
   return {
     success: true,
     data: { executionId, status: 'cancelled', cancelledAt: new Date().toISOString() },
   };
+}
+
+/**
+ * Approve a waiting execution (Human-in-the-loop)
+ */
+export async function approveExecution(executionId) {
+  await delay(200);
+  const exec = executionStore.get(executionId);
+  if (exec) {
+    exec.status = 'running';
+    exec.userConfirmed = true;
+    exec.logs.push({
+      timestamp: new Date().toISOString(),
+      level: 'info',
+      message: 'Human-in-the-loop approval received. Resuming automation.',
+    });
+    saveExecutionStore();
+    return { success: true, data: exec };
+  }
+  return { success: false, error: { message: 'Execution not found' } };
+}
+
+/**
+ * Reject a waiting execution (Human-in-the-loop)
+ */
+export async function rejectExecution(executionId) {
+  await delay(200);
+  const exec = executionStore.get(executionId);
+  if (exec) {
+    exec.status = 'failed';
+    exec.logs.push({
+      timestamp: new Date().toISOString(),
+      level: 'error',
+      message: 'Human-in-the-loop rejection received. Aborting execution.',
+    });
+    exec.error = { message: 'Execution rejected by user' };
+    saveExecutionStore();
+    return { success: true, data: exec };
+  }
+  return { success: false, error: { message: 'Execution not found' } };
 }
